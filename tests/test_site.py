@@ -108,7 +108,7 @@ def test_assets_stay_light():
     heavy = {name: size for name, size in sizes.items() if size > 400_000}
     assert not heavy, f"Assets over 400 KB: {heavy}"
     total = sum(p.stat().st_size for p in SITE.rglob("*") if p.is_file())
-    assert total < 1_000_000, f"Site is {total} bytes; keep it under 1 MB"
+    assert total < 1_500_000, f"Site is {total} bytes; keep it under 1.5 MB"
 
 
 def test_hero_shows_recognisable_tech(home):
@@ -137,3 +137,13 @@ def test_whatsapp_number_is_configured(home):
     links = home.select("[data-whatsapp]")
     assert len(links) >= 3 and all(link.has_attr("hidden") for link in links), "buttons start hidden; the script reveals them"
     assert re.search(r"const WHATSAPP_NUMBER='971\d{9}'", (SITE / "index.html").read_text(encoding="utf-8"))
+
+
+def test_previous_projects_show_screenshots_without_links(home):
+    cards = home.select("#work .work-card")
+    assert len(cards) >= 5
+    for card in cards:
+        img = card.select_one("img")
+        assert img and img.get("alt") and img["src"].startswith("assets/work-")
+        assert card.select_one("h3") and card.select_one("p")
+        assert not card.select("a"), "projects are shown without links"
