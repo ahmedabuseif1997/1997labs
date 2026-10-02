@@ -34,9 +34,9 @@ export function priceItem(id, c) {
 }
 
 /** Build the quote from recommended service ids. Delivery for add-ons runs in parallel with the main build. */
-export function buildQuote(ids, complexity, { custom = false, core = 3 } = {}) {
+export function buildQuote(ids, complexity, { custom = false, core = 2 } = {}) {
   const all = [...new Set(ids)].filter((id) => SERVICES[id]).map((id) => priceItem(id, complexity));
-  const items = all.slice(0, core), optional = all.slice(core, core + 2); // optional extras are priced but not added to the total
+  const items = all.slice(0, core), optional = all.slice(core, core + 3); // optional extras are priced but not added to the total
   const total = items.reduce((t, i) => ({ from: t.from + i.from, to: t.to + i.to }), { from: 0, to: 0 });
   const weeks = items.filter((i) => i.weeks).reduce((w, i) => [Math.max(w[0], i.weeks[0]), Math.max(w[1], i.weeks[1])], [0, 0]);
   const managed = custom || items.some((i) => ["app", "platform", "crm", "booking", "store"].includes(i.id));

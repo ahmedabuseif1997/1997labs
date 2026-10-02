@@ -68,12 +68,12 @@ export function recommend({ checks, scores, business, goal, hasWebsite }) {
   if (!(checks && (checks.chat || checks.whatsapp)) || goal === "automation") r.push("chatbot");
   if (hasWebsite && scores.google < 60) r.push("seo");
   if (!(checks && checks.arabic)) r.push("arabic");
-  return [...new Set(r)].slice(0, 5); // first 3 are the core plan, the rest are optional extras
+  return [...new Set(r)].slice(0, 5); // first 2 are the core plan, the rest are optional extras
 }
 
 /** 0..1 complexity used to place each price inside the owner's range. */
 export function complexity({ checks, business, hasWebsite }) {
-  let c = 0.35;
+  let c = 0.15; // quotes start near the owner's entry price
   if (business === "retail" || business === "realestate") c += 0.15;
   if (hasWebsite && checks && checks.htmlKB > 150) c += 0.1;
   if (hasWebsite && checks && (checks.store || checks.booking)) c += 0.1;

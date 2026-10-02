@@ -46,7 +46,7 @@ test("analysis: reads the basics from HTML", () => {
   const rec = recommend({ checks: c, scores: s, business: "clinic", goal: "booking", hasWebsite: true });
   assert.ok(rec.includes("booking") && rec.includes("arabic") && rec.length <= 5);
   const q = buildQuote(rec, 0.4);
-  assert.ok(q.items.length <= 3 && q.optional.length <= 2);
+  assert.ok(q.items.length <= 2 && q.optional.length <= 3);
   assert.equal(q.total.from, q.items.reduce((t, i) => t + i.from, 0), "optional extras are not in the total");
 });
 
