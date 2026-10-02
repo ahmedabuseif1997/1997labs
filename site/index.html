@@ -141,7 +141,7 @@
 
 <script>
 /* WhatsApp: set the business number in international format, digits only (971 followed by the number). Buttons stay hidden while it is empty. */
-const WHATSAPP_NUMBER='';
+const WHATSAPP_NUMBER='971501924021';
 (()=>{const n=WHATSAPP_NUMBER.replace(/\D/g,'');const links=document.querySelectorAll('[data-whatsapp]');if(!n)return;const url='https://wa.me/'+n+'?text='+encodeURIComponent('Hi 1997 Labs, I would like a free evaluation for my business.');links.forEach(l=>{l.href=url;l.hidden=false;l.addEventListener('click',()=>{try{track('whatsapp_click',{})}catch(e){}})})})();
 </script>
 </body></html>

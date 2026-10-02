@@ -133,7 +133,7 @@ def test_section_labels_are_numbered_in_order(home):
     assert numbers == list(range(1, len(numbers) + 1))
 
 
-def test_whatsapp_buttons_stay_hidden_until_a_number_is_set(home):
+def test_whatsapp_number_is_configured(home):
     links = home.select("[data-whatsapp]")
-    assert len(links) >= 3 and all(link.has_attr("hidden") for link in links)
-    assert "const WHATSAPP_NUMBER=" in (SITE / "index.html").read_text(encoding="utf-8")
+    assert len(links) >= 3 and all(link.has_attr("hidden") for link in links), "buttons start hidden; the script reveals them"
+    assert re.search(r"const WHATSAPP_NUMBER='971\d{9}'", (SITE / "index.html").read_text(encoding="utf-8"))
