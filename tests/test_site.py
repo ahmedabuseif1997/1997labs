@@ -75,7 +75,7 @@ def test_copy_lives_in_the_html_not_in_a_rewrite_script(home):
 
 def test_old_red_accent_is_gone():
     html = (SITE / "index.html").read_text(encoding="utf-8")
-    assert not re.search(r"(?i)ff3b30|255,\s*59,\s*48", html)
+    assert not re.search(r"(?i)ff3b30|d82d26|255,\s*59,\s*48", html)
 
 
 def test_example_charts_are_labelled(home):
@@ -109,3 +109,31 @@ def test_assets_stay_light():
     assert not heavy, f"Assets over 400 KB: {heavy}"
     total = sum(p.stat().st_size for p in SITE.rglob("*") if p.is_file())
     assert total < 1_000_000, f"Site is {total} bytes; keep it under 1 MB"
+
+
+def test_hero_shows_recognisable_tech(home):
+    devices = home.select_one(".hero .hero-devices")
+    assert devices and devices.get("aria-label")
+    for part in (".dev-browser", ".dev-phone", ".dev-chat"):
+        assert devices.select_one(part), f"hero mockup {part} missing"
+
+
+def test_services_are_named_by_technology(home):
+    titles = [h.get_text(" ", strip=True) for h in home.select("#services .service-card h3")]
+    assert titles == ["Websites & online stores", "AI assistants & automation", "Mobile apps", "CRM & business systems"]
+
+
+def test_examples_cover_many_kinds_of_business(home):
+    assert len(home.select("#examples .example")) >= 8
+    assert home.select_one('#examples .example-any a[href="#contact"]')
+
+
+def test_section_labels_are_numbered_in_order(home):
+    numbers = [int(k.get_text()[:2]) for k in home.select(".kicker")]
+    assert numbers == list(range(1, len(numbers) + 1))
+
+
+def test_whatsapp_buttons_stay_hidden_until_a_number_is_set(home):
+    links = home.select("[data-whatsapp]")
+    assert len(links) >= 3 and all(link.has_attr("hidden") for link in links)
+    assert "const WHATSAPP_NUMBER=" in (SITE / "index.html").read_text(encoding="utf-8")
