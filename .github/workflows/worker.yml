@@ -1,0 +1,56 @@
+name: Review chatbot (Cloudflare Worker)
+
+# Tests the website-review API on every change to worker/ and deploys it from main.
+# Setup (once): see "AI website review" in README.md.
+on:
+  push:
+    branches: [main]
+    paths: ["worker/**", ".github/workflows/worker.yml"]
+  pull_request:
+    paths: ["worker/**", ".github/workflows/worker.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tests
+        working-directory: worker
+        run: node --version && npm test
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the Cloudflare setup is complete
+        run: |
+          missing=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN(secret)"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID(secret)"
+          [ -n "$KV_NAMESPACE_ID" ] || missing="$missing KV_NAMESPACE_ID(variable)"
+          if [ -n "$missing" ]; then echo "::error::Missing:$missing. See README.md → AI website review."; exit 1; fi
+      - name: Fill in the daily-limits store id
+        run: sed -i "s/__KV_NAMESPACE_ID__/${KV_NAMESPACE_ID}/" worker/wrangler.toml
+      - name: Deploy
+        working-directory: worker
+        run: npx --yes wrangler deploy
+      - name: Upload the secrets that are set
+        working-directory: worker
+        env:
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          for name in MINIMAX_API_KEY TURNSTILE_SECRET RESEND_API_KEY; do
+            if [ -n "${!name}" ]; then printf '%s' "${!name}" | npx --yes wrangler secret put "$name"; else echo "$name not set, skipped"; fi
+          done

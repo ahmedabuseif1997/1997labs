@@ -1,0 +1,16 @@
+name = "1997labs-review"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://1997labs.com,https://www.1997labs.com"
+MINIMAX_MODEL = "MiniMax-M3"
+MINIMAX_BASE_URL = "https://api.minimax.io/v1"
+PER_IP_DAILY = "5"
+GLOBAL_DAILY = "300"
+LEAD_TO = "info@1997labs.com"
+
+# Daily limits store. The deploy workflow fills in the id from the KV_NAMESPACE_ID repository variable.
+[[kv_namespaces]]
+binding = "LIMITS"
+id = "__KV_NAMESPACE_ID__"

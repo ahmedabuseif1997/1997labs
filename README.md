@@ -29,3 +29,18 @@ python -m pytest                         # checks (pip install -r requirements-d
 3. Point `1997labs.com` at GitHub Pages at your registrar: four `A` records on `@` (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`) and a `CNAME` record for `www` to `<your-user>.github.io`. Remove the records that point the domain elsewhere today.
 4. Have the privacy notice reviewed by someone qualified in UAE data protection (Federal Decree-Law 45/2021) before launch.
 5. Later: add GA4 and Clarity IDs (`ANALYTICS-SETUP.md`), connect the form to a form service or CRM, and add the Arabic version.
+
+## AI website review (chatbot)
+
+A visitor enters their website; the API in `worker/` (Cloudflare Worker) checks the page, prices a plan from the owner's price sheet (`worker/src/pricing.js`) and asks MiniMax to write a plain-language review in English or Arabic. Prices always come from the price sheet, never from the AI. The chat UI is `site/assets/review.js` and stays hidden until `REVIEW_API` is set in that file.
+
+Setup, once:
+
+1. **Cloudflare**: create a free account. Create an API token with the "Edit Cloudflare Workers" template. In GitHub (Settings → Secrets and variables → Actions) add secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+2. **Daily limits store**: in Cloudflare, Storage → KV → create a namespace (for example `1997labs-review-limits`). Add its id as the repository **variable** `KV_NAMESPACE_ID`.
+3. **Bot check**: in Cloudflare, Turnstile → add a widget for `1997labs.com`. Put the **site key** in `TURNSTILE_SITE_KEY` in `site/assets/review.js`, and add the **secret key** as the secret `TURNSTILE_SECRET`.
+4. **AI**: add your MiniMax API key as the secret `MINIMAX_API_KEY`. If your MiniMax account offers a spending limit, set one.
+5. **Lead emails** (optional): create a Resend account, verify the domain `1997labs.com` (Resend shows DNS records to add at Namecheap), and add the secret `RESEND_API_KEY`. Without it, leads still arrive on WhatsApp.
+6. Run **Actions → Review chatbot → Run workflow**. Copy the `workers.dev` address from the deploy log into `REVIEW_API` in `site/assets/review.js`.
+
+Limits (in `worker/wrangler.toml`): 5 reviews per visitor per day, 300 per day in total, 3 call-back requests per visitor per day. Tests: `cd worker && npm test`.
