@@ -60,6 +60,9 @@ export async function review(body, env) {
   const lang = body.lang === "ar" ? "ar" : "en";
   const business = BUSINESSES.includes(body.business) ? body.business : "other";
   const goal = GOALS.includes(body.goal) ? body.goal : "customers";
+  // What the visitor typed after choosing "Other". It goes only to the owner's quote email, never to the AI or the pricing.
+  const typed = (v) => String(v || "").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+  const businessOther = business === "other" ? typed(body.businessOther) : "", goalOther = goal === "other" ? typed(body.goalOther) : "";
   const hasWebsite = !body.noWebsite;
   let checks = null, scores = null, site = null, reachable = true;
   if (hasWebsite) {
@@ -77,7 +80,7 @@ export async function review(body, env) {
   catch { text = fallbackReview(facts, lang); }
   const label = (i) => ({ ...i, label: serviceLabel(i.id, lang), why: text.reasons[i.id] || "" });
   quote.items = quote.items.map(label); quote.optional = quote.optional.map(label);
-  return { status: 200, data: { lang, site, reachable, business, goal, scores, summary: text.summary, issues: text.issues, quote, limitedCheck: !!(checks && checks.jsShell) } };
+  return { status: 200, data: { lang, site, reachable, business, businessOther, goal, goalOther, scores, summary: text.summary, issues: text.issues, quote, limitedCheck: !!(checks && checks.jsShell) } };
 }
 
 /** Prices stay internal until the owner turns SHOW_PRICES on: visitors see the plan, never the amounts. */
@@ -100,7 +103,8 @@ export async function sendLead(env, body) {
   const line = (i) => `- ${i.label}: ${aed(i.from)}–${aed(i.to)} AED${i.weeks ? ` (${i.weeks[0]}–${i.weeks[1]} weeks)` : ""}`;
   const text = [
     "QUOTE TO APPROVE. It has NOT been sent to the customer. Reply to them after you approve it.", "",
-    `Name: ${name}`, `Contact: ${contact}`, `Language: ${r.lang}`, `Website: ${r.site || "none yet"}`, `Business: ${r.business}`, `Goal: ${r.goal}`,
+    `Name: ${name}`, `Contact: ${contact}`, `Language: ${r.lang}`, `Website: ${r.site || "none yet"}`, `Business: ${r.business}${r.businessOther ? ` (customer wrote: "${r.businessOther}")` : ""}`, `Goal: ${r.goal}${r.goalOther ? ` (customer wrote: "${r.goalOther}")` : ""}`,
+    ...(r.businessOther || r.goalOther ? ["The customer chose \"Other\": the plan below is general, so check it fits before you approve."] : []),
     `Score: ${r.scores ? r.scores.overall + "/100" : "-"}`, "", `Review: ${r.summary}`, "",
     "Plan (AED, excl. 5% VAT):", ...q.items.map(line), `Total: ${aed(q.total.from)}–${aed(q.total.to)} AED excl. 5% VAT`,
     ...(q.optional.length ? ["", "Optional extras (not in the total):", ...q.optional.map(line)] : []),

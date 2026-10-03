@@ -107,5 +107,29 @@ test("quote requests email the full priced quote to the owner only", async () =>
     assert.deepEqual(sent.body.to, ["info@1997labs.com"]);
     assert.match(sent.body.text, /QUOTE TO APPROVE/); assert.match(sent.body.text, /Total: [\d,]+–[\d,]+ AED excl\. 5% VAT/); assert.match(sent.body.text, /AED\/month excl\. 5% VAT/);
     assert.equal(sent.body.reply_to, "sara@example.com");
+    assert.doesNotMatch(sent.body.text, /customer wrote/);
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("'Other' answers reach the owner's email only, cleaned and shortened", async () => {
+  const kv = fakeKV(); const realFetch = globalThis.fetch; let sent, aiCalled = false;
+  globalThis.fetch = async () => new Response(SAMPLE, { status: 200, headers: { "content-type": "text/html" } });
+  try {
+    const r = (await review({ url: "clinic.ae", business: "other", businessOther: "Car\nwash  " + "x".repeat(200), goal: "other", goalOther: "Loyalty app" }, {})).data;
+    assert.equal(r.business, "other"); assert.equal(r.goal, "other");
+    assert.ok(r.businessOther.startsWith("Car wash x") && r.businessOther.length === 80 && !/\n/.test(r.businessOther));
+    assert.equal(r.goalOther, "Loyalty app");
+    assert.ok(r.quote.items.length > 0, "a general plan is still made");
+    const picked = (await review({ url: "clinic.ae", business: "clinic", businessOther: "ignored", goal: "booking", goalOther: "ignored" }, {})).data;
+    assert.equal(picked.businessOther, ""); assert.equal(picked.goalOther, "");
+    globalThis.fetch = async (url, init) => { if (/minimax/.test(String(url))) { aiCalled = true; assert.doesNotMatch(init.body, /Loyalty app|Car wash/); return new Response("{}", { status: 500 }); } return new Response(SAMPLE, { status: 200, headers: { "content-type": "text/html" } }); };
+    await review({ url: "clinic.ae", business: "other", businessOther: "Car wash", goal: "other", goalOther: "Loyalty app" }, { MINIMAX_API_KEY: "k", MINIMAX_BASE_URL: "https://api.minimax.io/v1", MINIMAX_MODEL: "m" });
+    assert.ok(aiCalled, "the AI was asked, without the typed text");
+    await kv.put("review:o1", JSON.stringify(r));
+    globalThis.fetch = async (url, init) => { sent = JSON.parse(init.body); return new Response("{}", { status: 200 }); };
+    assert.equal((await sendLead({ LIMITS: kv, RESEND_API_KEY: "k" }, { name: "Ali", contact: "+971500000000", reviewId: "o1" })).status, 200);
+    assert.match(sent.text, /Business: other \(customer wrote: "Car wash x+"\)/);
+    assert.match(sent.text, /Goal: other \(customer wrote: "Loyalty app"\)/);
+    assert.match(sent.text, /chose "Other"/);
   } finally { globalThis.fetch = realFetch; }
 });

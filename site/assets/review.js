@@ -15,7 +15,8 @@
       noSiteMsg: "No problem. I'll suggest what to build and estimate the price.",
       business: 'What kind of business is it?', goal: 'What matters most right now?',
       biz: { restaurant: 'Restaurant & café', clinic: 'Clinic & salon', retail: 'Retail & e-commerce', realestate: 'Real estate', services: 'Services & consulting', other: 'Other' },
-      goals: { customers: 'More customers', booking: 'Online booking', sales: 'Sell online', automation: 'Less manual work', design: 'Better design' },
+      goals: { customers: 'More customers', booking: 'Online booking', sales: 'Sell online', automation: 'Less manual work', design: 'Better design', other: 'Other' },
+      otherBiz: 'Please type your type of business.', otherGoal: 'Please type what you need.', errOther: 'Please type a few words.',
       human: 'Last step: a quick check that you are human.', start: 'Review my website', startNoSite: 'Get my estimate',
       steps: ['Opening your website', 'Checking phones and speed', 'Checking Google basics', 'Preparing your estimate'], stepsNoSite: ['Matching your goals', 'Choosing the right services', 'Preparing your estimate'],
       score: 'Website score', cats: { mobile: 'Mobile', google: 'Google', speed: 'Speed', trust: 'Trust', customers: 'Contact' },
@@ -35,7 +36,8 @@
       urlPh: 'yourwebsite.ae', next: 'التالي', noSite: 'ليس لدي موقع بعد', noSiteMsg: 'لا مشكلة. سأقترح ما يجب بناؤه وأقدّر التكلفة.',
       business: 'ما نوع نشاطك التجاري؟', goal: 'ما الأهم بالنسبة لك الآن؟',
       biz: { restaurant: 'مطعم ومقهى', clinic: 'عيادة وصالون', retail: 'تجزئة ومتجر إلكتروني', realestate: 'عقارات', services: 'خدمات واستشارات', other: 'أخرى' },
-      goals: { customers: 'عملاء أكثر', booking: 'حجز أونلاين', sales: 'البيع أونلاين', automation: 'عمل يدوي أقل', design: 'تصميم أفضل' },
+      goals: { customers: 'عملاء أكثر', booking: 'حجز أونلاين', sales: 'البيع أونلاين', automation: 'عمل يدوي أقل', design: 'تصميم أفضل', other: 'أخرى' },
+      otherBiz: 'من فضلك اكتب نوع نشاطك التجاري.', otherGoal: 'من فضلك اكتب ما تحتاجه.', errOther: 'من فضلك اكتب بضع كلمات.',
       human: 'الخطوة الأخيرة: تحقق سريع من أنك لست روبوتًا.', start: 'راجع موقعي', startNoSite: 'احصل على التقدير',
       steps: ['فتح موقعك', 'فحص الجوال والسرعة', 'فحص أساسيات جوجل', 'تجهيز التقدير'], stepsNoSite: ['مطابقة أهدافك', 'اختيار الخدمات المناسبة', 'تجهيز التقدير'],
       score: 'تقييم الموقع', cats: { mobile: 'الجوال', google: 'جوجل', speed: 'السرعة', trust: 'الثقة', customers: 'التواصل' },
@@ -86,8 +88,15 @@
     noSite.onclick = () => { state.noWebsite = true; say(t.noSite, 'user'); say(t.noSiteMsg); askBusiness(); };
     foot().replaceChildren(row, noSite); input.focus();
   }
-  function askBusiness() { const t = T[lang]; say(t.business); chips(t.biz, (k) => { state.business = k; askGoal(); }); }
-  function askGoal() { const t = T[lang]; say(t.goal); chips(t.goals, (k) => { state.goal = k; confirm(); }); }
+  // "Other": the visitor types their own answer, which goes to the owner with the quote.
+  const typeOwn = (ph, onDone) => {
+    const t = T[lang]; say(ph); const row = el('div', 'rv-row'); const input = el('input'); input.type = 'text'; input.maxLength = 80; input.placeholder = ph; input.setAttribute('aria-label', ph);
+    const next = el('button', 'rv-btn primary', t.next); next.type = 'button'; row.append(input, next);
+    const go = () => { const v = input.value.trim(); if (v.length < 2) { say(t.errOther); return; } say(v, 'user'); onDone(v); };
+    next.onclick = go; input.onkeydown = (e) => { if (e.key === 'Enter') go(); }; foot().replaceChildren(row); input.focus();
+  };
+  function askBusiness() { const t = T[lang]; say(t.business); chips(t.biz, (k) => { state.business = k; if (k === 'other') typeOwn(t.otherBiz, (v) => { state.businessOther = v; askGoal(); }); else askGoal(); }); }
+  function askGoal() { const t = T[lang]; say(t.goal); chips(t.goals, (k) => { state.goal = k; if (k === 'other') typeOwn(t.otherGoal, (v) => { state.goalOther = v; confirm(); }); else confirm(); }); }
   function confirm() {
     const t = T[lang]; const btn = el('button', 'rv-btn primary', state.noWebsite ? t.startNoSite : t.start); btn.type = 'button';
     btn.onclick = () => submit(); foot().replaceChildren(btn);

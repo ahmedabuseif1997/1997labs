@@ -52,7 +52,7 @@ export function score(c) {
 }
 
 export const BUSINESSES = ["restaurant", "clinic", "retail", "realestate", "services", "other"];
-export const GOALS = ["customers", "booking", "sales", "automation", "design"];
+export const GOALS = ["customers", "booking", "sales", "automation", "design", "other"];
 
 /** Pick services from the owner's list with fixed rules, so every quote is explainable. */
 export function recommend({ checks, scores, business, goal, hasWebsite }) {
