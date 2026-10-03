@@ -22,6 +22,8 @@
       found: 'What we found', rec: 'Recommended plan & estimate', total: 'Estimated total', weeks: (a, b) => `Delivery: ${a}–${b} weeks`,
       monthly: (n) => `Optional hosting & maintenance: ${n} AED/month`, extras: 'Optional extras (not in the total)', note: 'Estimate in AED. Your final price is confirmed after a free call.',
       unreachable: "I couldn't open that website, so this estimate is based on your answers.", limited: 'Your site is built with JavaScript, so some checks were limited.',
+      recHidden: 'Recommended plan', quoteHidden: 'Your personal quote: our team checks every quote and sends it to you directly. Where should we send it?', getQuote: 'Send me my quote', quoteSent: 'Thanks! We will send your quote to you directly.',
+      waHidden: (r) => `Hi 1997 Labs, I used your AI website review.\nWebsite: ${r.site || 'none yet'}\nScore: ${r.scores ? r.scores.overall + '/100' : '-'}\nRecommended: ${r.quote.items.map((i) => i.label).join(', ')}\nPlease send me a quote.`,
       wa: 'Send to WhatsApp', call: 'Get a call back', name: 'Your name', contact: 'Phone or email', send: 'Send', sent: "Thanks! We'll contact you within one working day.",
       errUrl: 'That address does not look right. Try something like yourwebsite.ae', errLimit: 'You have reached today\'s review limit. Message us on WhatsApp and we will review it for you.',
       errBot: 'The human check failed. Please try again.', err: 'Something went wrong. Please try again, or message us on WhatsApp.', again: 'Review another website',
@@ -40,6 +42,8 @@
       found: 'ما وجدناه', rec: 'الخطة المقترحة والتقدير', total: 'الإجمالي التقديري', weeks: (a, b) => `مدة التنفيذ: ${a}–${b} أسابيع`,
       monthly: (n) => `استضافة وصيانة اختيارية: ${n} درهم شهريًا`, extras: 'إضافات اختيارية (غير محسوبة في الإجمالي)', note: 'تقدير بالدرهم الإماراتي. يتم تأكيد السعر النهائي بعد مكالمة مجانية.',
       unreachable: 'لم أتمكن من فتح هذا الموقع، لذلك بُني التقدير على إجاباتك.', limited: 'موقعك مبني بجافاسكربت، لذلك كانت بعض الفحوصات محدودة.',
+      recHidden: 'الخطة المقترحة', quoteHidden: 'عرض السعر الخاص بك: يراجع فريقنا كل عرض ويرسله إليك مباشرة. إلى أين نرسله؟', getQuote: 'أرسلوا لي عرض السعر', quoteSent: 'شكرًا! سنرسل لك عرض السعر مباشرة.',
+      waHidden: (r) => `مرحبًا 1997 Labs، استخدمت مراجعة الموقع الذكية.\nالموقع: ${r.site || 'لا يوجد بعد'}\nالتقييم: ${r.scores ? r.scores.overall + '/100' : '-'}\nالخطة المقترحة: ${r.quote.items.map((i) => i.label).join('، ')}\nأرجو إرسال عرض السعر.`,
       wa: 'أرسل عبر واتساب', call: 'اطلب اتصالًا', name: 'اسمك', contact: 'الهاتف أو البريد', send: 'إرسال', sent: 'شكرًا! سنتواصل معك خلال يوم عمل واحد.',
       errUrl: 'هذا العنوان غير صحيح. جرّب مثل yourwebsite.ae', errLimit: 'وصلت إلى حد المراجعات اليوم. راسلنا على واتساب وسنراجعه لك.',
       errBot: 'فشل التحقق. حاول مرة أخرى.', err: 'حدث خطأ. حاول مرة أخرى أو راسلنا على واتساب.', again: 'راجع موقعًا آخر',
@@ -116,7 +120,17 @@
     if (r.limitedCheck) card.append(el('p', 'rv-note', t.limited));
     if (r.summary) card.append(el('p', '', r.summary));
     if (r.issues && r.issues.length) { card.append(el('span', 'rv-h', t.found)); const ul = el('ul', 'rv-issues'); r.issues.forEach((i) => { const li = el('li'); li.append(el('b', '', i.title), document.createTextNode(i.detail)); ul.append(li); }); card.append(ul); }
-    card.append(el('span', 'rv-h', t.rec)); const q = el('div', 'rv-quote');
+    const hidden = !!r.quote.pricesHidden;
+    card.append(el('span', 'rv-h', hidden ? t.recHidden : t.rec)); const q = el('div', 'rv-quote');
+    if (hidden) {
+      [...r.quote.items, ...(r.quote.optional || [])].forEach((i) => { const row = el('div', 'rv-item'); row.append(el('span', '', i.label)); if (i.why) row.append(el('small', '', i.why)); q.append(row); });
+      if (r.quote.weeks) q.append(el('span', 'rv-note', t.weeks(r.quote.weeks[0], r.quote.weeks[1])));
+      card.append(q);
+      const actions = el('div', 'rv-actions');
+      if (WA) { const a = el('a', 'rv-btn', t.wa); a.href = `https://wa.me/${WA}?text=${encodeURIComponent(t.waHidden(r))}`; a.target = '_blank'; a.rel = 'noopener'; actions.append(a); }
+      card.append(actions); body().append(card); body().scrollTop = card.offsetTop - 12; state.result = r;
+      say(t.quoteHidden); askCall(r, true); return;
+    }
     r.quote.items.forEach((i) => { const row = el('div', 'rv-item'); row.append(el('span', '', i.label), ltr(el('strong', '', `${fmt(i.from)}–${fmt(i.to)} AED`))); if (i.why) row.append(el('small', '', i.why)); q.append(row); });
     const total = el('div', 'rv-total'); total.append(el('span', '', t.total), ltr(el('strong', '', `${fmt(r.quote.total.from)}–${fmt(r.quote.total.to)} AED`))); q.append(total);
     if (r.quote.weeks) q.append(el('span', 'rv-note', t.weeks(r.quote.weeks[0], r.quote.weeks[1])));
@@ -127,16 +141,16 @@
     const callBtn = el('button', 'rv-btn', t.call); callBtn.type = 'button'; callBtn.onclick = () => askCall(r); actions.append(callBtn);
     card.append(actions); body().append(card); body().scrollTop = card.offsetTop - 12; state.result = r; again();
   }
-  function askCall(r) {
+  function askCall(r, quoteMode) {
     const t = T[lang]; const name = el('input'); name.id = 'rv-name'; name.placeholder = t.name; name.setAttribute('aria-label', t.name);
     const contact = el('input'); contact.id = 'rv-contact'; contact.placeholder = t.contact; contact.setAttribute('aria-label', t.contact);
-    const send = el('button', 'rv-btn primary', t.send); send.type = 'button';
+    const send = el('button', 'rv-btn primary', quoteMode ? t.getQuote : t.send); send.type = 'button';
     send.onclick = async () => {
       if (!name.value.trim() || !contact.value.trim()) return;
       send.disabled = true;
       try {
-        const res = await fetch(cfg.api.replace(/\/$/, '') + '/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: name.value, contact: contact.value, site: r.site, business: state.business, goal: state.goal, score: r.scores ? r.scores.overall : '', quote: r.quote.total, items: r.quote.items.map((i) => i.label) }) });
-        say(res.ok ? t.sent : t.err); foot().replaceChildren(); again();
+        const res = await fetch(cfg.api.replace(/\/$/, '') + '/api/lead', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reviewId: r.reviewId, name: name.value, contact: contact.value }) });
+        say(res.ok ? (quoteMode ? t.quoteSent : t.sent) : t.err); foot().replaceChildren(); again();
       } catch { say(t.err); send.disabled = false; }
     };
     const row = el('div', 'rv-row'); row.append(contact, send); foot().replaceChildren(name, row); name.focus();

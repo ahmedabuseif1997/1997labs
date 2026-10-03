@@ -32,7 +32,7 @@ python -m pytest                         # checks (pip install -r requirements-d
 
 ## AI website review (chatbot)
 
-A visitor enters their website; the API in `worker/` (Cloudflare Worker) checks the page, prices a plan from the owner's price sheet (`worker/src/pricing.js`) and asks MiniMax to write a plain-language review in English or Arabic. Prices always come from the price sheet, never from the AI. The chat UI is `site/assets/review.js` and stays hidden until `REVIEW_API` is set in that file.
+A visitor enters their website; the API in `worker/` (Cloudflare Worker) checks the page, prices a plan from the owner's price sheet (`worker/src/pricing.js`) and asks MiniMax to write a plain-language review in English or Arabic. Prices always come from the price sheet, never from the AI, and are not shown to visitors: the visitor sees the recommended plan and leaves a name and contact, and the full priced quote is emailed to info@1997labs.com marked "QUOTE TO APPROVE". Set `SHOW_PRICES = "true"` in `worker/wrangler.toml` to show prices on the site instead. Lead emails (step 5) are therefore required. The chat UI is `site/assets/review.js` and stays hidden until `REVIEW_API` is set in that file.
 
 Setup, once:
 
@@ -40,7 +40,7 @@ Setup, once:
 2. **Daily limits store**: in Cloudflare, Storage → KV → create a namespace (for example `1997labs-review-limits`). Add its id as the repository **variable** `KV_NAMESPACE_ID`.
 3. **Bot check**: in Cloudflare, Turnstile → add a widget for `1997labs.com`. Put the **site key** in `TURNSTILE_SITE_KEY` in `site/assets/review.js`, and add the **secret key** as the secret `TURNSTILE_SECRET`.
 4. **AI**: add your MiniMax API key as the secret `MINIMAX_API_KEY`. If your MiniMax account offers a spending limit, set one.
-5. **Lead emails** (optional): create a Resend account, verify the domain `1997labs.com` (Resend shows DNS records to add at Namecheap), and add the secret `RESEND_API_KEY`. Without it, leads still arrive on WhatsApp.
+5. **Lead emails** (required while prices are hidden): create a Resend account, verify the domain `1997labs.com` (Resend shows DNS records to add at Namecheap), and add the secret `RESEND_API_KEY`. Without it, visitors can still message you on WhatsApp, but quote requests from the chat fail.
 6. Run **Actions → Review chatbot → Run workflow**. Copy the `workers.dev` address from the deploy log into `REVIEW_API` in `site/assets/review.js`.
 
 Limits (in `worker/wrangler.toml`): 5 reviews per visitor per day, 300 per day in total, 3 call-back requests per visitor per day. Tests: `cd worker && npm test`.

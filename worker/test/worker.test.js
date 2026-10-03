@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { normaliseUrl } from "../src/safety.js";
 import { priceItem, buildQuote, SERVICES, MARKET, MARKET_DISCOUNT } from "../src/pricing.js";
 import { analyzeHtml, score, recommend } from "../src/analyze.js";
-import worker, { review } from "../src/index.js";
+import worker, { review, publicView, sendLead } from "../src/index.js";
 
 test("URL safety: accepts normal sites, blocks private and odd targets", () => {
   assert.equal(normaliseUrl("example.ae").url, "https://example.ae/");
@@ -73,4 +73,39 @@ test("handler: rejects other websites, and reviews need the bot check", async ()
   const req = (origin, body) => new Request("https://w.dev/api/review", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) });
   assert.equal((await worker.fetch(req("https://evil.com", {}), {})).status, 403);
   assert.equal((await worker.fetch(req("https://1997labs.com", { url: "x.ae" }), {})).status, 403); // no Turnstile secret configured
+});
+
+const fakeKV = () => { const m = new Map(); return { get: async (k) => m.get(k) ?? null, put: async (k, v) => { m.set(k, v); }, m }; };
+
+test("prices stay hidden from visitors until SHOW_PRICES is on", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(SAMPLE, { status: 200, headers: { "content-type": "text/html" } });
+  try {
+    const kv = fakeKV(); const env = { ALLOW_NO_TURNSTILE: "true", LIMITS: kv };
+    const req = new Request("https://w.dev/api/review", { method: "POST", headers: { origin: "https://1997labs.com", "content-type": "application/json" }, body: JSON.stringify({ url: "clinic.ae", business: "clinic", goal: "booking" }) });
+    const res = await worker.fetch(req, env); const data = await res.json();
+    const text = JSON.stringify(data);
+    assert.equal(res.status, 200); assert.equal(data.quote.pricesHidden, true);
+    assert.ok(!/"from"|"to"|"total"|"monthly"/.test(text), "no amounts in the public response");
+    const stored = JSON.parse(kv.m.get(`review:${data.reviewId}`));
+    assert.ok(stored.quote.total.from > 0, "full quote kept server-side");
+    assert.ok(publicView(stored, true).quote.total, "SHOW_PRICES=true shows prices");
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("quote requests email the full priced quote to the owner only", async () => {
+  const kv = fakeKV(); const realFetch = globalThis.fetch; let sent;
+  const r = (await (async () => { globalThis.fetch = async () => new Response(SAMPLE, { status: 200, headers: { "content-type": "text/html" } }); return review({ url: "clinic.ae", business: "clinic", goal: "booking" }, {}); })()).data;
+  await kv.put("review:abc", JSON.stringify(r));
+  globalThis.fetch = async (url, init) => { sent = { url: String(url), body: JSON.parse(init.body) }; return new Response("{}", { status: 200 }); };
+  try {
+    assert.equal((await sendLead({ LIMITS: kv, RESEND_API_KEY: "k" }, { name: "Sara", contact: "sara@example.com" })).status, 400);
+    assert.equal((await sendLead({ LIMITS: kv, RESEND_API_KEY: "k" }, { name: "Sara", contact: "sara@example.com", reviewId: "nope" })).status, 404);
+    const ok = await sendLead({ LIMITS: kv, RESEND_API_KEY: "k" }, { name: "Sara", contact: "sara@example.com", reviewId: "abc" });
+    assert.equal(ok.status, 200);
+    assert.match(sent.url, /api\.resend\.com/);
+    assert.deepEqual(sent.body.to, ["info@1997labs.com"]);
+    assert.match(sent.body.text, /QUOTE TO APPROVE/); assert.match(sent.body.text, /Total: [\d,]+–[\d,]+ AED/);
+    assert.equal(sent.body.reply_to, "sara@example.com");
+  } finally { globalThis.fetch = realFetch; }
 });

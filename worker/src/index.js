@@ -77,22 +77,43 @@ export async function review(body, env) {
   catch { text = fallbackReview(facts, lang); }
   const label = (i) => ({ ...i, label: serviceLabel(i.id, lang), why: text.reasons[i.id] || "" });
   quote.items = quote.items.map(label); quote.optional = quote.optional.map(label);
-  return { status: 200, data: { lang, site, reachable, scores, summary: text.summary, issues: text.issues, quote, limitedCheck: !!(checks && checks.jsShell) } };
+  return { status: 200, data: { lang, site, reachable, business, goal, scores, summary: text.summary, issues: text.issues, quote, limitedCheck: !!(checks && checks.jsShell) } };
 }
 
-async function sendLead(env, body) {
+/** Prices stay internal until the owner turns SHOW_PRICES on: visitors see the plan, never the amounts. */
+export function publicView(data, showPrices) {
+  if (showPrices) return data;
+  const strip = (i) => ({ id: i.id, label: i.label, why: i.why, weeks: i.weeks });
+  return { ...data, quote: { items: data.quote.items.map(strip), optional: data.quote.optional.map(strip), weeks: data.quote.weeks, pricesHidden: true } };
+}
+
+/** A visitor asks for their quote: the full priced quote is emailed to the owner to approve, never to the visitor. */
+export async function sendLead(env, body) {
   const clean = (v, n) => String(v || "").replace(/[\r\n]+/g, " ").trim().slice(0, n);
-  const name = clean(body.name, 80), contact = clean(body.contact, 120);
+  const name = clean(body.name, 80), contact = clean(body.contact, 120), id = clean(body.reviewId, 64);
   if (!name || !contact) return { status: 400, data: { error: "missing_contact" } };
+  if (!id || !env.LIMITS) return { status: 400, data: { error: "missing_review" } };
+  const stored = await env.LIMITS.get(`review:${id}`);
+  if (!stored) return { status: 404, data: { error: "review_expired" } };
   if (!env.RESEND_API_KEY) return { status: 503, data: { error: "email_not_configured" } };
-  const q = body.quote || {};
-  const lines = [`Name: ${name}`, `Contact: ${contact}`, `Website: ${clean(body.site, 200) || "none"}`, `Business: ${clean(body.business, 40)}`, `Goal: ${clean(body.goal, 40)}`,
-    `Score: ${clean(body.score, 10)}`, `Estimate: ${clean(q.from, 12)}–${clean(q.to, 12)} AED`, `Items: ${clean((body.items || []).join(", "), 300)}`];
-  const r = await fetch("https://api.resend.com/emails", {
+  const r = JSON.parse(stored), q = r.quote, aed = (n) => Number(n).toLocaleString("en-US");
+  const line = (i) => `- ${i.label}: ${aed(i.from)}–${aed(i.to)} AED${i.weeks ? ` (${i.weeks[0]}–${i.weeks[1]} weeks)` : ""}`;
+  const text = [
+    "QUOTE TO APPROVE. It has NOT been sent to the customer. Reply to them after you approve it.", "",
+    `Name: ${name}`, `Contact: ${contact}`, `Language: ${r.lang}`, `Website: ${r.site || "none yet"}`, `Business: ${r.business}`, `Goal: ${r.goal}`,
+    `Score: ${r.scores ? r.scores.overall + "/100" : "-"}`, "", `Review: ${r.summary}`, "",
+    "Plan:", ...q.items.map(line), `Total: ${aed(q.total.from)}–${aed(q.total.to)} AED`,
+    ...(q.optional.length ? ["", "Optional extras (not in the total):", ...q.optional.map(line)] : []),
+    "", `Hosting & maintenance: ${aed(q.monthly)} AED/month (${q.monthlyPlan})`, `Delivery: ${q.weeks ? q.weeks[0] + "–" + q.weeks[1] + " weeks" : "-"}`,
+  ].join("\n");
+  const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? { reply_to: contact } : {};
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: env.LEAD_FROM || "1997 Labs Reviews <reviews@1997labs.com>", to: [env.LEAD_TO || "info@1997labs.com"], subject: `New website review lead: ${name}`, text: lines.join("\n") }),
+    body: JSON.stringify({ from: env.LEAD_FROM || "1997 Labs Reviews <reviews@1997labs.com>", to: [env.LEAD_TO || "info@1997labs.com"], subject: `Quote to approve: ${name} (${r.site || "new website"})`, text, ...replyTo }),
   });
-  return r.ok ? { status: 200, data: { ok: true } } : { status: 502, data: { error: "email_failed" } };
+  if (!res.ok) return { status: 502, data: { error: "email_failed" } };
+  await env.LIMITS.put(`lead:${id}`, JSON.stringify({ name, contact, at: new Date().toISOString() }), { expirationTtl: 2592000 });
+  return { status: 200, data: { ok: true } };
 }
 
 export default {
@@ -112,6 +133,10 @@ export default {
     if (!(await verifyTurnstile(env, body.token, ip))) return json({ error: "bot_check_failed" }, 403, headers);
     if (!(await withinLimits(env, ip))) return json({ error: "daily_limit" }, 429, headers);
     const r = await review(body, env);
-    return json(r.data, r.status, headers);
+    if (r.status === 200 && env.LIMITS) {
+      r.data.reviewId = crypto.randomUUID(); // the full priced quote is kept server-side for 7 days
+      await env.LIMITS.put(`review:${r.data.reviewId}`, JSON.stringify(r.data), { expirationTtl: 604800 });
+    }
+    return json(r.status === 200 ? publicView(r.data, env.SHOW_PRICES === "true") : r.data, r.status, headers);
   },
 };
