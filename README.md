@@ -30,9 +30,11 @@ python -m pytest                         # checks (pip install -r requirements-d
 4. Have the privacy notice reviewed by someone qualified in UAE data protection (Federal Decree-Law 45/2021) before launch.
 5. Later: add GA4 and Clarity IDs (`ANALYTICS-SETUP.md`), connect the form to a form service or CRM, and add the Arabic version.
 
-## AI website review (chatbot)
+## AI chat (chatbot)
 
-A visitor enters their website; the API in `worker/` (Cloudflare Worker) checks the page, prices a plan from the owner's price sheet (`worker/src/pricing.js`) and asks MiniMax to write a plain-language review in English or Arabic. Prices always come from the price sheet, never from the AI, and are not shown to visitors: the visitor sees the recommended plan and leaves a name and contact, and the full priced quote is emailed to info@1997labs.com marked "QUOTE TO APPROVE". Set `SHOW_PRICES = "true"` in `worker/wrangler.toml` to show prices on the site instead. Lead emails (step 5) are therefore required. The chat UI is `site/assets/review.js` and stays hidden until `REVIEW_API` is set in that file.
+A free chat in the corner of the site (`site/assets/review.js`), answered by MiniMax through the API in `worker/` (Cloudflare Worker), in English or Arabic. The AI asks short questions to understand the customer's business and need, checks any website address they send (the server opens the page and gives the AI only the check results), and recommends services from the owner's list in `worker/src/pricing.js`. Rules in `worker/src/ai.js` keep it on topic and stop it from following instructions typed by visitors.
+
+Prices always come from the price sheet, never from the AI. The AI never sees them, and the server replaces any reply that mentions money. Visitors see the recommended plan (no prices) and leave a name and contact; the full priced quote and the conversation are emailed to info@1997labs.com marked "QUOTE TO APPROVE". Set `SHOW_PRICES = "true"` in `worker/wrangler.toml` to show prices on the site instead. Lead emails (step 5) are therefore required. Without a MiniMax key the chat still checks websites with fixed wording and otherwise hands the visitor to WhatsApp or a call back. The chat stays hidden until `REVIEW_API` is set in `site/assets/review.js`.
 
 Setup, once:
 
@@ -43,4 +45,4 @@ Setup, once:
 5. **Lead emails** (required while prices are hidden): create a Resend account, verify the domain `1997labs.com` (Resend shows DNS records to add at Namecheap), and add the secret `RESEND_API_KEY`. Without it, visitors can still message you on WhatsApp, but quote requests from the chat fail.
 6. Run **Actions → Review chatbot → Run workflow**. Copy the `workers.dev` address from the deploy log into `REVIEW_API` in `site/assets/review.js`.
 
-Limits (in `worker/wrangler.toml`): 5 reviews per visitor per day, 300 per day in total, 3 call-back requests per visitor per day. Tests: `cd worker && npm test`.
+Limits (in `worker/wrangler.toml`): 5 new chats per visitor per day, 300 new chats per day in total, 20 messages per chat, 3 quote or call-back requests per visitor per day. Conversations are kept for 7 days. Each chat message saves one record in the Cloudflare KV store; Cloudflare's free plan limits KV writes per day (see Cloudflare's Workers KV pricing), so move to the Workers paid plan if the chat gets busy. Tests: `cd worker && npm test`.

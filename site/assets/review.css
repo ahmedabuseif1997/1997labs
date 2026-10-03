@@ -38,3 +38,6 @@
 @media(max-width:760px){.rv-launch{left:1rem;padding:.8rem 1rem}.rv-launch .rv-full{display:none}.rv-launch .rv-short{display:inline}
 .rv-panel{left:0;bottom:0;width:100vw;height:100svh;border-radius:0;border:0}}
 @media(prefers-reduced-motion:no-preference){.rv-panel:not([hidden]){animation:rv-in .25s ease}}@keyframes rv-in{from{opacity:0;transform:translateY(12px)}}
+.rv-ideas{align-self:stretch}.rv-body>.rv-actions{align-self:flex-start}.rv-turnstile:empty{display:none}
+.rv-typing{color:#9aa49e;font-style:italic}.rv-msg.rv-note{background:none;padding:0 .2rem}
+@media(prefers-reduced-motion:no-preference){.rv-typing{animation:rv-pulse 1.2s ease-in-out infinite}}@keyframes rv-pulse{50%{opacity:.45}}

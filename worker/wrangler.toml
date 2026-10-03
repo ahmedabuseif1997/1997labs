@@ -6,8 +6,10 @@ compatibility_date = "2026-09-01"
 ALLOWED_ORIGINS = "https://1997labs.com,https://www.1997labs.com"
 MINIMAX_MODEL = "MiniMax-M3"
 MINIMAX_BASE_URL = "https://api.minimax.io/v1"
+# New chats allowed per visitor and in total per day, and messages allowed per chat.
 PER_IP_DAILY = "5"
 GLOBAL_DAILY = "300"
+CHAT_MAX_TURNS = "20"
 LEAD_TO = "info@1997labs.com"
 # Prices are hidden from visitors; every quote is emailed to the owner to approve. Set to "true" to show prices.
 SHOW_PRICES = "false"
