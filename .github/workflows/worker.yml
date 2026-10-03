@@ -33,18 +33,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Check the Cloudflare setup is complete
+        id: setup
         run: |
           missing=""
           [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN(secret)"
           [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID(secret)"
           [ -n "$KV_NAMESPACE_ID" ] || missing="$missing KV_NAMESPACE_ID(variable)"
-          if [ -n "$missing" ]; then echo "::error::Missing:$missing. See README.md → AI website review."; exit 1; fi
+          if [ -n "$missing" ]; then
+            echo "::notice::Chatbot not deployed yet. Missing:$missing. See README.md → AI website review."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Fill in the daily-limits store id
+        if: steps.setup.outputs.ready == 'true'
         run: sed -i "s/__KV_NAMESPACE_ID__/${KV_NAMESPACE_ID}/" worker/wrangler.toml
       - name: Deploy
+        if: steps.setup.outputs.ready == 'true'
         working-directory: worker
         run: npx --yes wrangler deploy
       - name: Upload the secrets that are set
+        if: steps.setup.outputs.ready == 'true'
         working-directory: worker
         env:
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
