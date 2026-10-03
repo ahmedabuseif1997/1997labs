@@ -102,9 +102,9 @@ export async function sendLead(env, body) {
     "QUOTE TO APPROVE. It has NOT been sent to the customer. Reply to them after you approve it.", "",
     `Name: ${name}`, `Contact: ${contact}`, `Language: ${r.lang}`, `Website: ${r.site || "none yet"}`, `Business: ${r.business}`, `Goal: ${r.goal}`,
     `Score: ${r.scores ? r.scores.overall + "/100" : "-"}`, "", `Review: ${r.summary}`, "",
-    "Plan:", ...q.items.map(line), `Total: ${aed(q.total.from)}–${aed(q.total.to)} AED`,
+    "Plan (AED, excl. 5% VAT):", ...q.items.map(line), `Total: ${aed(q.total.from)}–${aed(q.total.to)} AED excl. 5% VAT`,
     ...(q.optional.length ? ["", "Optional extras (not in the total):", ...q.optional.map(line)] : []),
-    "", `Hosting & maintenance: ${aed(q.monthly)} AED/month (${q.monthlyPlan})`, `Delivery: ${q.weeks ? q.weeks[0] + "–" + q.weeks[1] + " weeks" : "-"}`,
+    "", `Hosting & maintenance: ${aed(q.monthly)} AED/month excl. 5% VAT (${q.monthlyPlan})`, `Delivery: ${q.weeks ? q.weeks[0] + "–" + q.weeks[1] + " weeks" : "-"}`,
   ].join("\n");
   const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? { reply_to: contact } : {};
   const res = await fetch("https://api.resend.com/emails", {

@@ -105,7 +105,7 @@ test("quote requests email the full priced quote to the owner only", async () =>
     assert.equal(ok.status, 200);
     assert.match(sent.url, /api\.resend\.com/);
     assert.deepEqual(sent.body.to, ["info@1997labs.com"]);
-    assert.match(sent.body.text, /QUOTE TO APPROVE/); assert.match(sent.body.text, /Total: [\d,]+–[\d,]+ AED/);
+    assert.match(sent.body.text, /QUOTE TO APPROVE/); assert.match(sent.body.text, /Total: [\d,]+–[\d,]+ AED excl\. 5% VAT/); assert.match(sent.body.text, /AED\/month excl\. 5% VAT/);
     assert.equal(sent.body.reply_to, "sara@example.com");
   } finally { globalThis.fetch = realFetch; }
 });
