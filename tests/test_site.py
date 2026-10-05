@@ -123,9 +123,12 @@ def test_services_are_named_by_technology(home):
     assert titles == ["Websites & online stores", "AI assistants & automation", "Mobile apps", "CRM & business systems"]
 
 
-def test_examples_cover_many_kinds_of_business(home):
-    assert len(home.select("#examples .example")) >= 8
-    assert home.select_one('#examples .example-any a[href="#contact"]')
+def test_solutions_cover_many_kinds_of_business(home):
+    assert len(home.select("#solutions .example")) >= 8
+    assert home.select_one('#solutions .example-any a[href="#contact"]')
+    for card in home.select("#solutions .example:not(.example-any)"):
+        assert card.select_one(".ex-problem") and card.h3 and card.select_one(".ex-result"), "each card: problem, solution, result"
+    assert "Example designs" not in home.select_one(".dev-caption").get_text()
 
 
 def test_section_labels_are_numbered_in_order(home):
