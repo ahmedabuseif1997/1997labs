@@ -464,6 +464,39 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 .consent button{border:1px solid var(--line2);border-radius:12px;padding:10px 14px;font-weight:600}
 .consent .accept{background:var(--lime);color:var(--on-lime);border-color:var(--lime)}
 @media (max-width:620px){.consent{grid-template-columns:1fr}.consent-actions{display:grid;grid-template-columns:1fr 1fr}}
+
+/* ---------- hero seal: always centred in its tile ---------- */
+.t-brand{justify-content:center;align-content:center;grid-template-columns:100%;grid-template-rows:100%}
+/* ---------- split-flap board ---------- */
+.flapband{padding:56px 0 64px}
+.flapboard{container-type:inline-size;width:min(100%,660px);margin:0 auto;padding:clamp(18px,4.5vw,34px) 0;border-radius:24px;background:#121416;border:1px solid rgba(255,255,255,.07);box-shadow:var(--shadow);display:grid;gap:3cqw;justify-items:center}
+.sf-row{display:flex;justify-content:center;gap:.9cqw}
+.sf{position:relative;text-align:center;color:#F2F2EE;font-family:"Manrope",system-ui,sans-serif;font-weight:800;background:linear-gradient(#202326 50%,#1a1c1f 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.sf::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.7)}
+.sf-brand .sf{width:8cqw;height:11cqw;font-size:6.8cqw;line-height:11cqw;border-radius:1.2cqw;color:#A3B5FF}
+.sf-msg .sf{width:5.6cqw;height:8cqw;font-size:4.6cqw;line-height:8cqw;border-radius:.9cqw}
+.sf-msg .sf.word{width:auto;min-width:64cqw;padding:0 4cqw;font-family:"IBM Plex Sans Arabic","Manrope",sans-serif;font-weight:700;direction:rtl}
+.sf.go{animation:sf-flip .18s ease-in-out}
+@keyframes sf-flip{50%{transform:scaleY(.06)}}
+/* ---------- phones ---------- */
+.mobile-menu a.btn{display:flex;justify-content:center;align-items:center;border-bottom:0}
+.os-demo{font-size:12.5px}
+@media (max-width:620px){
+  .icon-btn{width:42px;height:42px}
+  .sec{padding:64px 0}
+  .flapband{padding:28px 0 36px}
+  footer{margin-top:0;padding:28px 0 96px}
+  .bento{grid-auto-rows:84px;gap:8px}
+  .bento .t-lang{display:none!important}
+  .t-chat{grid-row:span 3}
+  .t-num b{font-size:28px;margin-top:2px}
+  .t-clock .clk{width:40px;height:40px;margin:0 auto 4px}.t-clock .clk i{height:15px}
+  .t-clock small{font-size:11px}
+  .os-scene{height:min(56vh,480px)}
+  .pstage{height:300px}
+  .pil .lab small{font-size:20px}
+  .pil .lab b{font-size:30px;line-height:1.15}
+}
 </style>
 </head>
 <body>
@@ -518,7 +551,7 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
     </h1>
 <p class="sub fp d4" data-i18n="hero.sub">We build AI assistants on WhatsApp, websites, online stores, booking systems, CRMs and mobile apps — so your business answers faster, sells more and runs itself.</p>
 <div class="cta-row fp d5"><a href="#contact" class="btn btn-glow" data-track="hero_cta" data-i18n="cta.evalLong">Get a free evaluation</a><button class="btn btn-dark btn-lg" data-open-chat><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/></svg><span data-i18n="cta.chatLong">Chat with our AI</span></button><a href="https://wa.me/971501924021" class="btn btn-dark btn-lg" data-wa><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WhatsApp</a></div>
-<div class="trust fp d5"><span data-i18n="trust.1">Arabic & English</span><span data-i18n="trust.2">Built in Dubai</span><span data-i18n="trust.3">Made for non-technical owners</span></div></div>
+<div class="trust fp d5"><span data-i18n="trust.1">Arabic & English</span><span data-i18n="trust.2">Built in Dubai</span><span data-i18n="trust.3">Easy to use, no tech skills</span></div></div>
     <div class="bento" aria-hidden="true">
       <div class="tile t-brand"><svg class="seal" viewBox="0 0 400 400" aria-hidden="true"><defs><path id="sp" d="M200 200 m-150 0 a150 150 0 1 1 300 0 a150 150 0 1 1 -300 0"/></defs>
 <circle class="ln" cx="200" cy="200" r="182"/><circle class="ln" cx="200" cy="200" r="174"/><circle class="ln" cx="200" cy="200" r="122"/>
@@ -534,6 +567,9 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
   </div>
   <div class="scroll-hint" aria-hidden="true"><span data-i18n="hero.scroll">Scroll</span><i></i></div>
 </header>
+
+<!-- ================= SPLIT-FLAP BOARD ================= -->
+<section class="flapband" aria-label="1997 Labs builds AI assistants, websites, mobile apps, online stores, CRM systems and automation"><div class="wrap"><div class="flapboard" id="flapBoard" dir="ltr" aria-hidden="true"><div class="sf-row sf-brand"></div><div class="sf-row sf-msg"></div></div></div></section>
 
 <!-- ================= 3D "YOUR BUSINESS RUNS ITSELF" ================= -->
 <section class="os" id="os" aria-label="How 1997 Labs systems work">
@@ -704,7 +740,7 @@ const AR = {
 "cta.chat":"دردشة ذكية","cta.eval":"تقييم مجاني","cta.evalLong":"احصل على تقييم مجاني","cta.chatLong":"تحدث مع مساعدنا الذكي",
 "hero.pill":"شركة ذكاء اصطناعي وبرمجيات · دبي","hero.l1":"عملاء أكثر.","hero.l2":"مجهود أقل.","hero.l3a":"أرباح","hero.l3b":"أكثر.",
 "hero.sub":"نبني مساعدين أذكياء على واتساب، ومواقع إلكترونية، ومتاجر، وأنظمة حجز، وأنظمة إدارة عملاء، وتطبيقات جوال — ليرد نشاطك التجاري أسرع ويبيع أكثر ويعمل تلقائياً.",
-"trust.1":"عربي وإنجليزي","trust.2":"صُنع في دبي","trust.3":"مصمم لأصحاب الأعمال","hero.scroll":"مرر",
+"trust.1":"عربي وإنجليزي","trust.2":"صُنع في دبي","trust.3":"سهل الاستخدام بدون خبرة تقنية","hero.scroll":"مرر",
 "os.eyebrow":"مثال حي","os.h1":"شاهد نشاطك","os.h2":"يعمل وحده.",
 "os.s1t":"عميل يراسلك","os.s1d":"على واتساب، في أي وقت — حتى الساعة ٢ فجراً.","os.s2t":"مساعدك الذكي يرد خلال ثوانٍ","os.s2d":"بالعربية أو الإنجليزية، بالإجابة الصحيحة.","os.s3t":"يتم إنشاء الحجز","os.s3d":"مباشرة في التقويم، مع تذكير.","os.s4t":"نظام العملاء يتحدث تلقائياً","os.s4d":"كل عميل محفوظ للمتابعة والعروض.","os.s5t":"ترى الأرباح","os.s5d":"عملاء أكثر، مجهود أقل — بأرقام مباشرة.",
 "os.biz":"نشاطك التجاري","os.online":"مساعد ذكي · متصل","os.m1":"مرحبا، ممكن أحجز زيارة بكرة؟","os.m2":"أكيد! بكرة الساعة ٥:٠٠ مساءً متاح. أحجز لك؟","os.m3":"نعم لو سمحت","os.m4":"تم ✅ سيصلك تذكير قبل الموعد بساعة.",
@@ -816,7 +852,7 @@ function frame(){
       const a=ease(clamp((st-s0)/0.7));
       const fl=Math.sin(t*1.1+s0)*6;
       c.style.opacity=a;
-      c.style.transform=`translate3d(${x}px,${y+fl+(1-a)*60}px,${z*a-(1-a)*500}px) rotateY(${r*(1-a)+r*.4}deg) rotateX(${(1-a)*30}deg)`;
+      c.style.transform=`translate3d(${x*(innerWidth<620?.7:1)}px,${y*(innerWidth<620?.75:1)+fl+(1-a)*60}px,${z*a-(1-a)*500}px) rotateY(${r*(1-a)+r*.4}deg) rotateX(${(1-a)*30}deg)`;
     });
     osBubs.forEach(b=>b.classList.toggle("show", st > +b.dataset.s + 0.25));
     const cur=Math.min(4,Math.floor(st));
@@ -872,7 +908,7 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   const lng=document.getElementById("lng"); let lf=0; setInterval(()=>{ lf^=1; lng.textContent= lf?"English":"عربي"; },2000);
   // assemble scene
   const sec=document.getElementById("assemble"), tiles=[...document.querySelectorAll(".atile")];
-  const R=tiles.map((_,i)=>({x:(Math.random()-.5)*900,y:(Math.random()-.5)*500,z:-600-Math.random()*900,rx:(Math.random()-.5)*70,ry:(Math.random()-.5)*90}));
+  const R=tiles.map((_,i)=>({x:(Math.random()-.5)*(innerWidth<620?320:900),y:(Math.random()-.5)*(innerWidth<620?260:500),z:-600-Math.random()*900,rx:(Math.random()-.5)*70,ry:(Math.random()-.5)*90}));
   const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)), ez=t=>1-Math.pow(1-t,3);
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   function tick(){
@@ -892,7 +928,7 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; let mx=0,my=0;
   addEventListener("pointermove",e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5},{passive:true});
   function tick(){ const r=sec.getBoundingClientRect(), p=cl(-r.top/(r.height-innerHeight));
-    w.style.transform=`rotateX(${8-my*4}deg) rotateY(${mx*14}deg)`; const gap=innerWidth<620?100:innerWidth<980?165:260; let last=-1;
+    w.style.transform=`rotateX(${8-my*4}deg) rotateY(${mx*14}deg)`; const gap=innerWidth<620?(innerWidth-40)/4:innerWidth<980?165:260; let last=-1;
     ps.forEach((pl,i)=>{ const u=ez(cl(p*5-i*1.05-0.15)); pl.style.setProperty("--h",(240*u)+"px"); pl.style.setProperty("--o",u); pl.style.left=((i-1.5)*gap)+"px"; if(u>.98) last=i; });
     ps.forEach((pl,i)=>pl.classList.toggle("on",i===last));
     if(!reduce) requestAnimationFrame(tick); }
@@ -900,6 +936,43 @@ document.getElementById("yr").textContent = new Date().getFullYear();
 })();
 
 /* ================= Init ================= */
+
+/* ================= Split-flap board ================= */
+(function(){
+  const board=document.getElementById("flapBoard"); if(!board) return;
+  const CH="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // One row of flaps. set() centres the text and flips only the cells that change; a newer text cancels older flips.
+  // Arabic letters join, so Arabic shows as one whole-word flap.
+  function sfRow(row){
+    let cells=[], mode="";
+    const make=(n,word)=>{ row.innerHTML=""; cells=Array.from({length:n},()=>{ const c=document.createElement("span"); c.className=word?"sf word":"sf"; c.textContent=" "; row.appendChild(c); return c; }); };
+    function flip(cell,to,delay,turns){
+      const v=(cell._v=(cell._v||0)+1); cell._to=to;
+      if(still){ cell.textContent=to; return; }
+      let n=turns;
+      const step=()=>{ if(cell._v!==v) return; cell.classList.remove("go"); void cell.offsetWidth; cell.classList.add("go");
+        setTimeout(()=>{ if(cell._v!==v) return; cell.textContent = n>0 ? (cell.classList.contains("word") ? " " : CH[Math.floor(Math.random()*CH.length)]) : to; if(n-->0) setTimeout(step,110); },90); };
+      setTimeout(step,delay);
+    }
+    return { set(text,{n=13,arabic=false,spin=1}={}){
+      const m = arabic ? "word" : "chars"+n;
+      if(m!==mode){ mode=m; make(arabic?1:n, arabic); }
+      if(arabic){ if(cells[0]._to!==text) flip(cells[0],text,0,3); return; }
+      const l=Math.max(0,Math.floor((n-text.length)/2)), t=(" ".repeat(l)+text).padEnd(n).slice(0,n);
+      cells.forEach((c,k)=>{ if(c._to!==t[k]) flip(c,t[k],k*80,spin+Math.floor(Math.random()*3)); });
+    } };
+  }
+  const top=sfRow(board.querySelector(".sf-brand")), bot=sfRow(board.querySelector(".sf-msg"));
+  const W={en:["AI ASSISTANTS","WEBSITES","MOBILE APPS","ONLINE STORES","CRM SYSTEMS","AUTOMATION"],
+           ar:["مساعدات ذكية","مواقع إلكترونية","تطبيقات جوال","متاجر إلكترونية","إدارة العملاء","أتمتة الأعمال"]};
+  let i=0;
+  const show=()=>bot.set(W[lang==="ar"?"ar":"en"][i%W.en.length],{n:13,arabic:lang==="ar"});
+  setTimeout(()=>{ top.set("1997 LABS",{n:9,spin:3}); show(); },350);
+  // Runs on its own timer, not tied to scrolling: a new service every 4 seconds (it rests only while the browser tab is hidden).
+  setInterval(()=>{ if(document.hidden) return; i++; show(); }, 4000);
+  window.__langHook=show;
+})();
+
 applyTheme(safeGet("theme_x") || "light");
 applyLang(safeGet("lang_x") || "en");
 requestAnimationFrame(frame);
