@@ -13,9 +13,9 @@ python -m http.server -d site 8002   # then open http://localhost:8002
 ## Main files
 
 - `site/index.html` — page structure, styling, motion, responsive behaviour, analytics scaffolding and copy.
-- `site/assets/1997-labs-hero-v7.jpg` — active hero artwork (quality-88 JPEG of the original v7 PNG, same 1942×809 size). The page recolours it to lime with a CSS filter.
+- `site/assets/fonts/` — self-hosted Manrope and IBM Plex Sans Arabic (OFL-1.1, from Fontsource).
 - `site/assets/1997-labs-mark.svg` — logo and favicon.
-- `site/assets/og-image.jpg` — 1200×630 share image (hero crop with the same lime filter applied).
+- `site/assets/og-image.jpg` — 1200×630 share image (screenshot of the light-mode hero).
 - `site/privacy.html`, `site/404.html`, `site/robots.txt`, `site/sitemap.xml`.
 - `1997-LABS-BRAND-PROFILE.md` — positioning and brand foundation.
 - `ANALYTICS-SETUP.md` — how to switch analytics on.
@@ -27,26 +27,27 @@ Older hero and logo files, `LOGO-GUIDE.md` (which describes the earlier 971 Labs
 - Brand: 1997 Labs, an **AI & Software Company** in Dubai. The descriptor sits next to the logo on every screen.
 - Main hook: “More customers. Less work. More revenue.”
 - Primary action: free business evaluation.
-- Palette: obsidian `#080B0A`, electric lime `#B8FF3D`, warm white `#F4F5EF`, slate `#87918B`.
+- Design: the owner's chosen "Design ★" (Oct 2026), a mix of the Signal, Bento, Navy Official and Platinum Minimal concepts. Light mode by default with a dark switch; English and Arabic (full right-to-left).
+- Palette: light background `#ECECE8`, surfaces `#FFFFFF`, text `#141615`, accent blue `#3E5BD8`; dark background `#111314`, surfaces `#1A1D20`, text `#ECECE8`, accent `#8AA2FF`.
 - Voice: short, plain, catchy, and understandable to a nontechnical business owner.
-- Layout: cinematic hero, then how we help, connected business technology, results and analytics, and the free review.
+- Layout: hero with live tiles and the turning 1997 seal, "watch your business run itself" 3D scene, services that assemble in 3D, a 3D carousel of real projects, industries, four rising "how it works" pillars, and the free-evaluation form.
 
 ## Implementation notes
 
 - All copy is written directly in the HTML. The earlier script that rewrote the text after the page loaded has been removed, so search engines, link previews and visitors without JavaScript see the real copy.
 - The three unused sections (profile, how we work, process) and their styles were deleted.
-- The analytics charts use example data and carry a visible “not client results” label.
+- Example figures carry a visible “not client results” note.
 - The consent banner only appears once a GA4 or Clarity ID is set in `analyticsConfig`.
-- The free-review form opens the visitor's email app addressed to `info@1997labs.com` (no server yet).
+- The free-evaluation form opens WhatsApp with the visitor's details typed in.
 
 ## Preserve while editing
 
-- The large metallic `1997` hero artwork and scroll motion.
-- The electric-lime brand direction.
+- The giant thin `1997`, the turning seal and the 3D scroll scenes.
+- The calm blue accent with light and dark modes.
 - The simplified, benefit-first language, plus the “AI & Software Company” descriptor.
 - Desktop and mobile layouts.
-- The interactive connected-business demonstration.
-- Analytics charts and the free-evaluation form.
+- The "business runs itself" demonstration.
+- The free-evaluation form.
 - `info@1997labs.com` as the public contact email.
 - Accessibility labels and reduced-motion support.
 

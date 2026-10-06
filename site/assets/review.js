@@ -66,7 +66,8 @@
   let s = {};
   const launch = el('button', 'rv-launch'); launch.type = 'button';
   const panel = el('div', 'rv-panel'); panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'false');
-  document.body.append(launch, panel);
+  const OWN_BUTTONS = !!document.querySelector('[data-open-chat]'); // the page has its own AI chat buttons
+  document.body.append(...(OWN_BUTTONS ? [panel] : [launch, panel]));
 
   function render() {
     const t = T[lang];
@@ -208,9 +209,11 @@
       const sc = el('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'; sc.async = true; sc.dataset.rvTurnstile = '1'; document.head.append(sc);
     }
   }
-  function close() { panel.hidden = true; launch.setAttribute('aria-expanded', 'false'); launch.focus(); }
+  function close() { panel.hidden = true; launch.setAttribute('aria-expanded', 'false'); if (!OWN_BUTTONS) launch.focus(); }
   render();
   launch.onclick = () => (panel.hidden ? open() : close());
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) close(); });
-  document.querySelectorAll('[data-open-review]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); open(); }));
+  document.querySelectorAll('[data-open-review],[data-open-chat]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); if (panel.hidden) open(); else close(); }));
+  // Lets the page open the chat and keep its language in step with the site's language switch.
+  window.RV = { open, close, setLang(l) { l = l === 'ar' ? 'ar' : 'en'; if (l === lang) return; lang = l; render(); if (!panel.hidden) start(); } };
 })();

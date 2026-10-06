@@ -40,12 +40,11 @@
 ## Visual identity
 
 - **Obsidian:** `#080B0A` — primary environment
-- **Electric lime:** `#B8FF3D` — action, momentum, connection (the one accent)
-- **Pale lime:** `#EFFFB8` — secondary highlight in charts and gradients
+- **Calm blue:** `#3E5BD8` (light mode) / `#8AA2FF` (dark mode) — action and connection (the one accent, since the Oct 2026 redesign; electric lime `#B8FF3D` was the earlier accent)
 - **Warm white:** `#F4F5EF` — clarity and typography
 - **Slate:** `#87918B` — supporting text
 
-Use near-black engineered surfaces, warm-white typography and one decisive electric-lime accent. Keep layouts spacious, technical and legible. The 1997 monogram is the primary compact mark; the sculptural 1997 artwork is a campaign asset, not a replacement for the logo. On the website the hero artwork is recoloured to lime with a CSS filter (`hue-rotate(78deg) saturate(1.12) brightness(.98)`).
+Since the October 2026 redesign the website is light by default (soft grey `#ECECE8` and white surfaces, near-black text) with a dark mode (charcoal `#111314`), one calm blue accent, Manrope type (IBM Plex Sans Arabic for Arabic), thin hairlines, a giant thin "1997" and a turning "1997 LABS • AI & SOFTWARE • DUBAI • UAE" seal. Keep layouts spacious and legible. The 1997 monogram remains the compact mark.
 
 Always show the descriptor **AI & Software Company** next to the name, so every visitor knows at a glance that 1997 Labs is a technology company.
 

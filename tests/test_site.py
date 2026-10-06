@@ -59,18 +59,14 @@ def test_tech_company_is_stated_up_front(home):
     """Visitors and search engines should see 'AI & Software Company' immediately."""
     assert DESCRIPTOR.search(home.title.string)
     assert DESCRIPTOR.search(home.find("meta", attrs={"name": "description"})["content"])
-    assert DESCRIPTOR.search(home.select_one(".brand small").get_text())
-    assert "AI agents" in home.select_one(".hero .hero-copy").get_text()
-    labels = [li.get_text(strip=True) for li in home.select(".hero .tech-row li")]
-    assert labels == ["AI agents", "Websites", "Mobile apps", "CRM systems", "Cloud & APIs"]
+    assert DESCRIPTOR.search(home.select_one(".hero .pill").get_text())
+    assert "AI assistants on WhatsApp" in home.select_one(".hero .sub").get_text()
 
 
-def test_copy_lives_in_the_html_not_in_a_rewrite_script(home):
-    scripts = " ".join(s.get_text() for s in home.find_all("script"))
-    assert ".hero h1" not in scripts, "A script rewrites the hero headline again"
+def test_english_copy_lives_in_the_html(home):
+    """Search engines and link previews read English from the HTML; Arabic is applied only when a visitor picks it."""
     assert home.select_one(".hero h1").get_text(" ", strip=True) == "More customers. Less work. More revenue."
-    for removed in ("profile", "process"):
-        assert not home.select(f"#{removed}"), f"Removed section #{removed} is back"
+    assert 'applyLang(safeGet("lang_x") || "en")' in (SITE / "index.html").read_text(encoding="utf-8")
 
 
 def test_old_red_accent_is_gone():
@@ -78,13 +74,13 @@ def test_old_red_accent_is_gone():
     assert not re.search(r"(?i)ff3b30|d82d26|255,\s*59,\s*48", html)
 
 
-def test_example_charts_are_labelled(home):
-    assert "not client results" in home.select_one(".charts-head .example-badge").get_text()
+def test_example_figures_are_labelled(home):
+    assert "not client results" in home.select_one("#os .os-demo").get_text()
 
 
-def test_consent_banner_waits_for_an_analytics_id():
-    html = (SITE / "index.html").read_text(encoding="utf-8")
-    assert "analyticsConfig.ga4||analyticsConfig.clarity" in html
+def test_consent_banner_waits_for_an_analytics_id(home):
+    assert home.select_one("#consent #allow-analytics")
+    assert "analyticsConfig.ga4||analyticsConfig.clarity" in (SITE / "index.html").read_text(encoding="utf-8")
 
 
 def test_privacy_notice_is_linked(home):
@@ -111,42 +107,51 @@ def test_assets_stay_light():
     assert total < 1_500_000, f"Site is {total} bytes; keep it under 1.5 MB"
 
 
-def test_hero_shows_recognisable_tech(home):
-    devices = home.select_one(".hero .hero-devices")
-    assert devices and devices.get("aria-label")
-    for part in (".dev-browser", ".dev-phone", ".dev-chat"):
-        assert devices.select_one(part), f"hero mockup {part} missing"
+def test_fonts_are_self_hosted():
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    assert "fonts.googleapis.com" not in html and "fonts.gstatic.com" not in html
+    fonts = re.findall(r"url\((assets/fonts/[^)]+)\)", html)
+    assert fonts and all((SITE / f).is_file() for f in fonts)
 
 
-def test_services_are_named_by_technology(home):
-    titles = [h.get_text(" ", strip=True) for h in home.select("#services .service-card h3")]
-    assert titles == ["Websites & online stores", "AI assistants & automation", "Mobile apps", "CRM & business systems"]
+def test_services_cover_what_we_sell(home):
+    titles = [t.get_text(strip=True) for t in home.select("#assemble .atile h3")]
+    assert titles == ["AI Assistant on WhatsApp", "Business Websites", "Online Stores", "Online Booking", "CRM Systems", "Mobile Apps", "Custom Platforms & Automation"]
 
 
-def test_solutions_cover_many_kinds_of_business(home):
-    assert len(home.select("#solutions .example")) >= 8
-    assert home.select_one('#solutions .example-any a[href="#contact"]')
-    for card in home.select("#solutions .example:not(.example-any)"):
-        assert card.select_one(".ex-problem") and card.h3 and card.select_one(".ex-result"), "each card: problem, solution, result"
-    assert "Example designs" not in home.select_one(".dev-caption").get_text()
-
-
-def test_section_labels_are_numbered_in_order(home):
-    numbers = [int(k.get_text()[:2]) for k in home.select(".kicker")]
-    assert numbers == list(range(1, len(numbers) + 1))
+def test_industries_cover_many_kinds_of_business(home):
+    tiles = home.select('#industries .ind a[href="#contact"]')
+    assert len(tiles) == 8 and tiles[-1].get_text(" ", strip=True).startswith("Your Business")
 
 
 def test_whatsapp_number_is_configured(home):
-    links = home.select("[data-whatsapp]")
-    assert len(links) >= 3 and all(link.has_attr("hidden") for link in links), "buttons start hidden; the script reveals them"
-    assert re.search(r"const WHATSAPP_NUMBER='971\d{9}'", (SITE / "index.html").read_text(encoding="utf-8"))
+    number = re.search(r'const WHATSAPP_NUMBER = "(971\d{9})"', (SITE / "index.html").read_text(encoding="utf-8")).group(1)
+    links = home.select("a[data-wa]")
+    assert len(links) >= 3 and all(a["href"].startswith(f"https://wa.me/{number}") for a in links)
 
 
 def test_previous_projects_show_screenshots_without_links(home):
-    cards = home.select("#work .work-card")
-    assert len(cards) >= 5
+    cards = home.select("#work .pcard")
+    assert len(cards) == 6
     for card in cards:
         img = card.select_one("img")
         assert img and img.get("alt") and img["src"].startswith("assets/work-")
-        assert card.select_one("h3") and card.select_one("p")
+        assert card.select_one(".meta b") and card.select_one(".sum").get_text(strip=True)
         assert not card.select("a"), "projects are shown without links"
+    assert "replace" not in home.select_one("#work .work-note").get_text().lower()
+
+
+def test_every_translatable_text_has_arabic():
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    start = html.index("const AR = {")
+    arabic = html[start:html.index("\n};", start)]
+    missing = sorted(k for k in set(re.findall(r'data-i18n="([^"]+)"', html)) if f'"{k}"' not in arabic)
+    assert not missing, f"No Arabic text for: {missing}"
+
+
+def test_ai_chat_is_the_real_assistant(home):
+    """The design's demo chat is gone; the AI chat buttons open assets/review.js, and stay hidden until it is set up."""
+    html = (SITE / "index.html").read_text(encoding="utf-8")
+    assert home.find("script", src="assets/review.js") and home.find("link", href="assets/review.css")
+    assert len(home.select("[data-open-chat]")) >= 3
+    assert not home.select("#chat") and "Demo chat" not in html and "window.RV" in html
