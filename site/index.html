@@ -464,6 +464,17 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 .consent button{border:1px solid var(--line2);border-radius:12px;padding:10px 14px;font-weight:600}
 .consent .accept{background:var(--lime);color:var(--on-lime);border-color:var(--lime)}
 @media (max-width:620px){.consent{grid-template-columns:1fr}.consent-actions{display:grid;grid-template-columns:1fr 1fr}}
+
+/* ---------- split-flap status board ---------- */
+.fcard.sfboard{width:370px;padding:14px 12px 12px;border-radius:18px;background:#121416;border:1px solid rgba(255,255,255,.08);box-shadow:0 30px 60px rgba(8,10,12,.35);display:grid;gap:8px;justify-items:center;backdrop-filter:none;-webkit-backdrop-filter:none}
+.sf-row{display:flex;gap:4px}
+.sf{position:relative;width:27px;height:38px;border-radius:5px;background:linear-gradient(#202326 50%,#1a1c1f 50%);color:#F2F2EE;font:800 21px/38px "Manrope",system-ui,sans-serif;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transform-origin:50% 50%}
+.sf::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.7)}
+.sf-brand .sf{color:#A3B5FF}
+.sf-msg .sf{width:23px;height:32px;font-size:17px;line-height:32px}
+.sf-msg .sf.word{width:auto;min-width:250px;padding:0 16px;font-family:"IBM Plex Sans Arabic","Manrope",sans-serif;font-weight:700;direction:rtl}
+.sf.go{animation:sf-flip .09s linear}
+@keyframes sf-flip{50%{transform:scaleY(.06)}}
 </style>
 </head>
 <body>
@@ -566,11 +577,12 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
               </div>
             </div>
           </div>
+          <div class="fcard sfboard" id="sfBoard" data-s="0" data-pos="-195,95,150,0" dir="ltr"><div class="sf-row sf-brand"></div><div class="sf-row sf-msg"></div></div>
           <div class="fcard" data-s="0" data-pos="-300,-190,90,-16"><div class="fh"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 01-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1121 12z"/></svg></span><div><b data-i18n="os.c1t">New WhatsApp message</b><small data-i18n="os.c1d">From a new customer</small></div></div></div>
           <div class="fcard" data-s="1" data-pos="110,-230,140,14"><div class="fh"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/></svg></span><div><b data-i18n="os.c2t">AI replied</b><small data-i18n="os.c2d">in 3 seconds</small></div></div></div>
           <div class="fcard" data-s="2" data-pos="-330,40,160,-12"><div class="fh"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 13"/></svg></span><div><b data-i18n="os.c3t">Booking confirmed</b><small data-i18n="os.c3d">Tomorrow · 5:00 PM</small></div></div></div>
           <div class="fcard" data-s="3" data-pos="120,-40,190,12"><div class="fh"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7"/></svg></span><div><b data-i18n="os.c4t">Saved to CRM</b><small data-i18n="os.c4d">Follow-up scheduled</small></div></div></div>
-          <div class="fcard" data-s="4" data-pos="-90,170,230,-6"><div class="fh"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6 4 4 7-7"/><path d="M15 8h6v6"/></svg></span><div><b data-i18n="os.c5t">Revenue this month</b><small data-i18n="os.c5d">Automated bookings</small></div></div><div class="big">+38%</div><div class="bars"><i style="height:35%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:100%"></i></div></div>
+          
         </div>
       </div>
     </div>
@@ -900,6 +912,44 @@ document.getElementById("yr").textContent = new Date().getFullYear();
 })();
 
 /* ================= Init ================= */
+
+/* ================= Split-flap status board ================= */
+(function(){
+  const board=document.getElementById("sfBoard"); if(!board) return;
+  const brand=board.querySelector(".sf-brand"), msg=board.querySelector(".sf-msg");
+  const WORDS={en:["NEW MESSAGE","AI REPLIED","BOOKED 5 PM","CRM UPDATED","REVENUE +38%"],ar:["رسالة جديدة","تم الرد","تم الحجز","حُفظ العميل","إيرادات أعلى"]};
+  const CH="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const make=(row,n)=>Array.from({length:n},()=>{const c=document.createElement("span");c.className="sf";c.textContent=" ";row.appendChild(c);return c;});
+  const top=make(brand,9);
+  let bottom=[], shown=-1, mode="";
+  function flip(cell,to,delay,turns){
+    const v=(cell._v=(cell._v||0)+1); cell._to=to; // a newer flip cancels this one
+    if(still){ cell.textContent=to; return; }
+    let n=turns;
+    const step=()=>{ if(cell._v!==v) return; cell.classList.remove("go"); void cell.offsetWidth; cell.classList.add("go");
+      setTimeout(()=>{ if(cell._v!==v) return; cell.textContent = n>0 ? (cell.classList.contains("word") ? " " : CH[Math.floor(Math.random()*CH.length)]) : to; if(n-->0) setTimeout(step,60); },45); };
+    setTimeout(step,delay);
+  }
+  const centre=(t,n)=>{ const l=Math.floor((n-t.length)/2); return (" ".repeat(Math.max(0,l))+t).padEnd(n).slice(0,n); };
+  function show(i){
+    const l = lang==="ar" ? "ar" : "en";
+    if(mode!==l){ mode=l; msg.innerHTML=""; bottom = l==="ar" ? make(msg,1) : make(msg,12); if(l==="ar") bottom[0].classList.add("word"); shown=-1; }
+    if(i===shown) return; shown=i;
+    const w=WORDS[l][i];
+    if(l==="ar"){ flip(bottom[0],w,0,3); return; }
+    const t=centre(w,12); bottom.forEach((c,k)=>{ if(c._to!==t[k]) flip(c,t[k],k*35,3+Math.floor(Math.random()*4)); });
+  }
+  function brandIn(){ const t="1997 LABS"; top.forEach((c,k)=>flip(c,t[k],k*70,5+Math.floor(Math.random()*5))); }
+  let seen=false;
+  new IntersectionObserver(es=>{ if(es[0].isIntersecting && !seen){ seen=true; brandIn(); show(0); } },{threshold:.2}).observe(board);
+  // Follow the scroll steps; with reduced motion the steps do not animate, so the words change every few seconds instead.
+  let tick=0;
+  setInterval(()=>{ if(!seen) return; const on=[...document.querySelectorAll("#osSteps li")].findIndex(li=>li.classList.contains("on"));
+    if(on>=0) show(on); else if(++tick%20===0) show((shown+1)%5); },150);
+  window.__langHook=()=>{ if(seen) { mode=""; const s0=Math.max(0,shown); shown=-1; show(s0); } };
+})();
+
 applyTheme(safeGet("theme_x") || "light");
 applyLang(safeGet("lang_x") || "en");
 requestAnimationFrame(frame);
