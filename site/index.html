@@ -497,6 +497,13 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
   .pil .lab small{font-size:20px}
   .pil .lab b{font-size:30px;line-height:1.15}
 }
+
+/* ---------- divider between the steps and the phone scene ---------- */
+.os-grid{position:relative}
+.os-grid::before,.os-grid::after{content:"";position:absolute;inset-inline-start:calc((100% - 40px)*.45 + 20px);pointer-events:none}
+.os-grid::before{top:6%;bottom:6%;width:1px;background:linear-gradient(to bottom,transparent,var(--line2) 18%,var(--line2) 82%,transparent)}
+.os-grid::after{top:calc(6% + 88%*var(--osp,0));width:7px;height:7px;margin-inline-start:-3px;margin-top:-3px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px var(--glow);transition:top .25s linear}
+@media (max-width:980px){.os-grid::before,.os-grid::after{display:none}}
 </style>
 </head>
 <body>
@@ -832,7 +839,7 @@ const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
 const ease=t=>1-Math.pow(1-t,3);
 function progress(el){ const r=el.getBoundingClientRect(); return clamp(-r.top/(r.height-innerHeight)); }
 
-const osSec=document.getElementById("os"), osWorld=document.getElementById("osWorld"), osBar=document.getElementById("osBar");
+const osGrid=document.querySelector(".os-grid"), osSec=document.getElementById("os"), osWorld=document.getElementById("osWorld"), osBar=document.getElementById("osBar");
 const osSteps=[...document.querySelectorAll("#osSteps li")], osCards=[...document.querySelectorAll(".fcard")], osBubs=[...document.querySelectorAll(".msgs .bub")];
 const work=document.getElementById("work"), steps=document.getElementById("steps"), trackFill=document.getElementById("trackFill");
 const r3d=[...document.querySelectorAll(".r3d")];
@@ -857,7 +864,7 @@ function frame(){
     osBubs.forEach(b=>b.classList.toggle("show", st > +b.dataset.s + 0.25));
     const cur=Math.min(4,Math.floor(st));
     osSteps.forEach((li,i)=>{ li.classList.toggle("on", i===cur); li.classList.toggle("done", i<cur); });
-    osBar.style.transform=`scaleX(${clamp(op*1.04)})`;
+    osBar.style.transform=`scaleX(${clamp(op*1.04)})`; osGrid.style.setProperty("--osp",clamp(op*1.04).toFixed(3));
 
     }
     /* --- work carousel --- */
@@ -925,11 +932,12 @@ document.getElementById("yr").textContent = new Date().getFullYear();
 (function(){
   const sec=document.getElementById("how"), w=document.getElementById("pworld"), ps=[...w.children];
   const cl=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)), ez=t=>1-Math.pow(1-t,3);
-  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; let mx=0,my=0;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches; let mx=0,my=0,tx=0,ty=0;
+  const hs=ps.map(()=>0), ease=reduce?1:.08; // each frame moves 8% of the way, so the pillars glide instead of snapping to the scroll
   addEventListener("pointermove",e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5},{passive:true});
   function tick(){ const r=sec.getBoundingClientRect(), p=cl(-r.top/(r.height-innerHeight));
-    w.style.transform=`rotateX(${8-my*4}deg) rotateY(${mx*14}deg)`; const gap=innerWidth<620?(innerWidth-40)/4:innerWidth<980?165:260; let last=-1;
-    ps.forEach((pl,i)=>{ const u=ez(cl(p*5-i*1.05-0.15)); pl.style.setProperty("--h",(240*u)+"px"); pl.style.setProperty("--o",u); pl.style.left=((i-1.5)*gap)+"px"; if(u>.98) last=i; });
+    tx+=(mx-tx)*ease*.6; ty+=(my-ty)*ease*.6; w.style.transform=`rotateX(${8-ty*4}deg) rotateY(${tx*10}deg)`; const gap=innerWidth<620?(innerWidth-40)/4:innerWidth<980?165:260; let last=-1;
+    ps.forEach((pl,i)=>{ hs[i]+=(ez(cl(p*4.4-i*1.05-0.15))-hs[i])*ease; const u=hs[i]; pl.style.setProperty("--h",(240*u)+"px"); pl.style.setProperty("--o",u); pl.style.left=((i-1.5)*gap)+"px"; if(u>.98) last=i; });
     ps.forEach((pl,i)=>pl.classList.toggle("on",i===last));
     if(!reduce) requestAnimationFrame(tick); }
   requestAnimationFrame(tick);
@@ -968,8 +976,8 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   let i=0;
   const show=()=>bot.set(W[lang==="ar"?"ar":"en"][i%W.en.length],{n:13,arabic:lang==="ar"});
   setTimeout(()=>{ top.set("1997 LABS",{n:9,spin:3}); show(); },350);
-  // Runs on its own timer, not tied to scrolling: a new service every 4 seconds (it rests only while the browser tab is hidden).
-  setInterval(()=>{ if(document.hidden) return; i++; show(); }, 4000);
+  // Runs on its own timer, not tied to scrolling: a new service every 2.5 seconds (it rests only while the browser tab is hidden).
+  setInterval(()=>{ if(document.hidden) return; i++; show(); }, 2500);
   window.__langHook=show;
 })();
 
