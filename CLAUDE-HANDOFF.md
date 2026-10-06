@@ -30,7 +30,7 @@ Older hero and logo files, `LOGO-GUIDE.md` (which describes the earlier 971 Labs
 - Design: the owner's chosen "Design ★" (Oct 2026), a mix of the Signal, Bento, Navy Official and Platinum Minimal concepts. Light mode by default with a dark switch; English and Arabic (full right-to-left).
 - Palette: light background `#ECECE8`, surfaces `#FFFFFF`, text `#141615`, accent blue `#3E5BD8`; dark background `#111314`, surfaces `#1A1D20`, text `#ECECE8`, accent `#8AA2FF`.
 - Voice: short, plain, catchy, and understandable to a nontechnical business owner.
-- Layout: hero with live tiles and the turning 1997 seal, "watch your business run itself" 3D scene, services that assemble in 3D, a 3D carousel of real projects, industries, four rising "how it works" pillars, and the free-evaluation form.
+- Layout: the turning 1997 seal is the small logo mark beside "1997 Labs" in the menu bar; hero with live tiles led by a split-flap board (1997 LABS + the services, a new word every 2.5 s), "watch your business run itself" 3D scene, services that assemble in 3D, a 3D carousel of real projects, industries, four rising "how it works" pillars, and the free-evaluation form.
 
 ## Implementation notes
 
@@ -42,7 +42,7 @@ Older hero and logo files, `LOGO-GUIDE.md` (which describes the earlier 971 Labs
 
 ## Preserve while editing
 
-- The giant thin `1997`, the turning seal and the 3D scroll scenes.
+- The giant thin `1997`, the turning seal logo, the split-flap board and the 3D scroll scenes.
 - The calm blue accent with light and dark modes.
 - The simplified, benefit-first language, plus the “AI & Software Company” descriptor.
 - Desktop and mobile layouts.
