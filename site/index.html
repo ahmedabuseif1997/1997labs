@@ -521,12 +521,14 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 .chan-ic svg{width:100%;height:100%}
 @media (max-width:620px){.chan{font-size:16px}.chan-ic{width:22px;height:22px}}
 
-/* ---------- hero chat tile: newest message always fully visible; the oldest leaves whole when space runs out ---------- */
-#tchat .tchat-msgs{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;overflow:hidden}
-#tchat .bub{display:none;flex:none;font-size:12.5px;padding:7px 11px;line-height:1.35}
-#tchat .bub.show{display:block;transform-origin:50% 100%;animation:tbub .5s cubic-bezier(.22,.7,.2,1) both}
+/* ---------- hero chat tile: messages stack from the top and stay still; when the next one won't fit,
+   the conversation glides up once so the oldest leaves whole (never a half-cut bubble) ---------- */
+#tchat .tchat-msgs{flex:1;min-height:0;position:relative;overflow:hidden}
+#tchat .tchat-track{display:flex;flex-direction:column;gap:7px}
+#tchat .bub{display:none;flex:none;font-size:12.5px;padding:7px 11px;line-height:1.35;transition:none}
+#tchat .bub.show{display:block;opacity:1;transform:none;transform-origin:50% 100%;animation:tbub .5s cubic-bezier(.22,.7,.2,1) both}
 #tchat .bub.show.gone{display:none}
-@keyframes tbub{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes tbub{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -584,7 +586,7 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 <div class="trust fp d5"><span data-i18n="trust.1">Arabic & English</span><span data-i18n="trust.2">Built in Dubai</span><span data-i18n="trust.3">Easy to use, no tech skills</span></div></div>
     <div class="bento" aria-hidden="true">
       <div class="tile t-brand sf-tile" dir="ltr"><div class="sf-board" id="flapBoard"><div class="sf-row sf-brand"></div><div class="sf-row sf-msg"></div></div></div>
-      <div class="tile t-chat" id="tchat"><small>WhatsApp AI</small><div class="tchat-msgs"><div class="bub in" data-i18n="os.m1">Hi, can I book a visit tomorrow?</div><div class="bub out" data-i18n="os.m2">Of course! Tomorrow at 5:00 PM is free. Shall I book it?</div><div class="bub in" data-i18n="os.m3">Yes please</div><div class="bub out" data-i18n="os.m4">Done ✅ You'll get a reminder 1 hour before.</div></div></div>
+      <div class="tile t-chat" id="tchat"><small>WhatsApp AI</small><div class="tchat-msgs"><div class="tchat-track"><div class="bub in" data-i18n="os.m1">Hi, can I book a visit tomorrow?</div><div class="bub out" data-i18n="os.m2">Of course! Tomorrow at 5:00 PM is free. Shall I book it?</div><div class="bub in" data-i18n="os.m3">Yes please</div><div class="bub out" data-i18n="os.m4">Done ✅ You'll get a reminder 1 hour before.</div></div></div></div>
       <div class="tile t-num"><small data-i18n="f.t1">Bookings today</small><b id="bk">0</b><div class="dotsrow" id="bkd"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
       <div class="tile t-clock"><div><div class="clk"><i></i></div><small data-i18n="f.t3">Always on · 24/7</small></div></div>
       <div class="tile t-rev"><small data-i18n="f.t2">Revenue</small><b>+38%</b><svg viewBox="0 0 300 80" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".25"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path class="a" style="color:var(--lime)" d="M0 70 L40 60 L80 64 L120 45 L160 50 L200 30 L240 34 L300 8 L300 80 L0 80Z"/><path class="l" d="M0 70 L40 60 L80 64 L120 45 L160 50 L200 30 L240 34 L300 8"/></svg></div>
@@ -923,31 +925,34 @@ document.getElementById("yr").textContent = new Date().getFullYear();
 (function(){
   const spot=document.getElementById("spot"), hero=spot.parentElement;
   hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect(); spot.style.setProperty("--sx",(e.clientX-r.left)+"px"); spot.style.setProperty("--sy",(e.clientY-r.top)+"px");});
-  // chat loop
-  const bubs=[...document.querySelectorAll("#tchat .bub")], msgs=document.querySelector("#tchat .tchat-msgs"); let k=0;
-  const stillChat=matchMedia("(prefers-reduced-motion: reduce)").matches, EASE="cubic-bezier(.22,.7,.2,1)";
+  // chat loop: messages stack from the top and stay still. When the next one won't fit, the whole
+  // conversation glides up once, just far enough for the oldest message(s) to leave whole.
+  const bubs=[...document.querySelectorAll("#tchat .bub")], msgs=document.querySelector("#tchat .tchat-msgs"), track=document.querySelector("#tchat .tchat-track");
+  const stillChat=matchMedia("(prefers-reduced-motion: reduce)").matches; let anims=[], step=0;
   const vis=()=>bubs.filter(b=>b.classList.contains("show")&&!b.classList.contains("gone"));
-  // never show a half-cut bubble: if the messages no longer fit, the oldest one leaves completely
-  const fit=()=>{ const top=msgs.getBoundingClientRect().top, on=vis(); while(on.length>1 && on[0].getBoundingClientRect().top<top-0.5) on.shift().classList.add("gone"); };
-  const refit=()=>{ bubs.forEach(b=>b.classList.remove("gone")); fit(); };
+  // the oldest visible messages that must leave so the rest fit, and how far that moves the rest up
+  const overflow=()=>{ const on=vis(), room=msgs.clientHeight; let k=0, shift=0;
+    while(k<on.length-1 && track.offsetHeight-shift>room+0.5){ k++; shift=on[k].offsetTop-on[0].offsetTop; }
+    return {leave:on.slice(0,k), shift}; };
+  const stop=()=>{ anims.forEach(a=>a.cancel()); anims=[]; };
+  const settle=(glide)=>{ const {leave,shift}=overflow(); if(!leave.length) return;
+    const done=()=>{ leave.forEach(b=>b.classList.add("gone")); stop(); };
+    if(!glide||stillChat){ done(); return; }
+    leave.forEach(b=>anims.push(b.animate([{opacity:1},{opacity:0}],{duration:500,easing:"ease",fill:"forwards"})));
+    const an=track.animate([{transform:"translateY(0)"},{transform:`translateY(${-shift}px)`}],{duration:750,easing:"cubic-bezier(.45,0,.2,1)",fill:"forwards"});
+    anims.push(an); an.onfinish=done; };
+  const refit=()=>{ stop(); bubs.forEach(b=>b.classList.remove("gone")); settle(false); };
   addEventListener("resize",refit); const prevHook=window.__langHook; window.__langHook=()=>{ if(prevHook) prevHook(); refit(); };
-  // a new message: the older ones glide up together; one that no longer fits fades out on the way, then leaves
-  const add=(b)=>{ if(stillChat){ b.classList.add("show"); fit(); return; }
-    const old=vis(), was=old.map(o=>o.getBoundingClientRect().top);
-    b.classList.add("show");
-    const top=msgs.getBoundingClientRect().top;
-    old.forEach((o,i)=>{ const now=o.getBoundingClientRect().top, dy=was[i]-now, out=now<top-0.5;
-      if(!out){ if(dy) o.animate([{transform:`translateY(${dy}px)`},{transform:"none"}],{duration:520,easing:EASE}); return; }
-      const an=o.animate([{transform:`translateY(${dy}px)`,opacity:1},{transform:"none",opacity:0}],{duration:420,easing:EASE,fill:"forwards"});
-      an.onfinish=()=>{ o.classList.add("gone"); an.cancel(); }; });
-  };
-  // end of the conversation: fade the whole chat out, then start again
-  const reset=()=>{ const clear=()=>bubs.forEach(b=>b.classList.remove("show","gone"));
+  // end of the conversation: hold, fade the whole chat out, then start again
+  const restart=()=>{ const clear=()=>{ stop(); bubs.forEach(b=>b.classList.remove("show","gone")); step=0; setTimeout(next,500); };
     if(stillChat){ clear(); return; }
-    const an=msgs.animate([{opacity:1},{opacity:0}],{duration:450,easing:"ease",fill:"forwards"});
+    const an=msgs.animate([{opacity:1},{opacity:0}],{duration:500,easing:"ease",fill:"forwards"});
     an.onfinish=()=>{ clear(); an.cancel(); }; };
-  setInterval(()=>{ if(k>=bubs.length+2){ reset(); k=0; return; } if(bubs[k]) add(bubs[k]); k++; },1100);
-  setTimeout(()=>{ add(bubs[0]); k=1; },300);
+  // a calm, chat-like pace: a pause before each message, a longer one before each AI reply
+  const WAIT=[300,1600,1300,1600];
+  function next(){ if(step>=bubs.length){ setTimeout(restart,3200); return; }
+    setTimeout(()=>{ bubs[step].classList.add("show"); settle(true); step++; next(); },WAIT[step]); }
+  next();
   // bookings count
   const bk=document.getElementById("bk"), dots=[...document.querySelectorAll("#bkd i")]; let n=0;
   setInterval(()=>{ n=n>=24?3:n+1; bk.textContent=n; dots.forEach((d,i)=>d.classList.toggle("on",i<Math.round(n/3))); },700);
