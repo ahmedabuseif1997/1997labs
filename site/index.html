@@ -522,9 +522,9 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 /* ---------- hero chat tile: newest message always fully visible; the oldest leaves whole when space runs out ---------- */
 #tchat .tchat-msgs{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;overflow:hidden}
 #tchat .bub{display:none;flex:none;font-size:12.5px;padding:7px 11px;line-height:1.35}
-#tchat .bub.show{display:block;animation:tbub .4s ease both}
+#tchat .bub.show{display:block;transform-origin:50% 100%;animation:tbub .5s cubic-bezier(.22,.7,.2,1) both}
 #tchat .bub.show.gone{display:none}
-@keyframes tbub{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes tbub{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -923,13 +923,29 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect(); spot.style.setProperty("--sx",(e.clientX-r.left)+"px"); spot.style.setProperty("--sy",(e.clientY-r.top)+"px");});
   // chat loop
   const bubs=[...document.querySelectorAll("#tchat .bub")], msgs=document.querySelector("#tchat .tchat-msgs"); let k=0;
+  const stillChat=matchMedia("(prefers-reduced-motion: reduce)").matches, EASE="cubic-bezier(.22,.7,.2,1)";
+  const vis=()=>bubs.filter(b=>b.classList.contains("show")&&!b.classList.contains("gone"));
   // never show a half-cut bubble: if the messages no longer fit, the oldest one leaves completely
-  const fit=()=>{ const top=msgs.getBoundingClientRect().top; const on=bubs.filter(b=>b.classList.contains("show")&&!b.classList.contains("gone"));
-    while(on.length>1 && on[0].getBoundingClientRect().top<top-0.5) on.shift().classList.add("gone"); };
+  const fit=()=>{ const top=msgs.getBoundingClientRect().top, on=vis(); while(on.length>1 && on[0].getBoundingClientRect().top<top-0.5) on.shift().classList.add("gone"); };
   const refit=()=>{ bubs.forEach(b=>b.classList.remove("gone")); fit(); };
   addEventListener("resize",refit); const prevHook=window.__langHook; window.__langHook=()=>{ if(prevHook) prevHook(); refit(); };
-  setInterval(()=>{ if(k>=bubs.length+2){ bubs.forEach(b=>b.classList.remove("show","gone")); k=0; return; } if(bubs[k]){ bubs[k].classList.add("show"); fit(); } k++; },1100);
-  setTimeout(()=>{ bubs[0].classList.add("show"); k=1; },300);
+  // a new message: the older ones glide up together; one that no longer fits fades out on the way, then leaves
+  const add=(b)=>{ if(stillChat){ b.classList.add("show"); fit(); return; }
+    const old=vis(), was=old.map(o=>o.getBoundingClientRect().top);
+    b.classList.add("show");
+    const top=msgs.getBoundingClientRect().top;
+    old.forEach((o,i)=>{ const now=o.getBoundingClientRect().top, dy=was[i]-now, out=now<top-0.5;
+      if(!out){ if(dy) o.animate([{transform:`translateY(${dy}px)`},{transform:"none"}],{duration:520,easing:EASE}); return; }
+      const an=o.animate([{transform:`translateY(${dy}px)`,opacity:1},{transform:"none",opacity:0}],{duration:420,easing:EASE,fill:"forwards"});
+      an.onfinish=()=>{ o.classList.add("gone"); an.cancel(); }; });
+  };
+  // end of the conversation: fade the whole chat out, then start again
+  const reset=()=>{ const clear=()=>bubs.forEach(b=>b.classList.remove("show","gone"));
+    if(stillChat){ clear(); return; }
+    const an=msgs.animate([{opacity:1},{opacity:0}],{duration:450,easing:"ease",fill:"forwards"});
+    an.onfinish=()=>{ clear(); an.cancel(); }; };
+  setInterval(()=>{ if(k>=bubs.length+2){ reset(); k=0; return; } if(bubs[k]) add(bubs[k]); k++; },1100);
+  setTimeout(()=>{ add(bubs[0]); k=1; },300);
   // bookings count
   const bk=document.getElementById("bk"), dots=[...document.querySelectorAll("#bkd i")]; let n=0;
   setInterval(()=>{ n=n>=24?3:n+1; bk.textContent=n; dots.forEach((d,i)=>d.classList.toggle("on",i<Math.round(n/3))); },700);
