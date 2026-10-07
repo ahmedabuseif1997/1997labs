@@ -155,3 +155,14 @@ def test_ai_chat_is_the_real_assistant(home):
     assert home.find("script", src="assets/review.js") and home.find("link", href="assets/review.css")
     assert len(home.select("[data-open-chat]")) >= 3
     assert not home.select("#chat") and "Demo chat" not in html and "window.RV" in html
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_tab_icon(page):
+    """Every page uses the "97" tab icon: SVG for modern browsers, .ico fallback, and an iPhone home-screen icon."""
+    soup = load(page)
+    hrefs = {(" ".join(l.get("rel")), l.get("href", "").lstrip("/")) for l in soup.select("link[rel]")}
+    assert ("icon", "assets/favicon.svg") in hrefs
+    assert ("icon", "favicon.ico") in hrefs
+    assert ("apple-touch-icon", "assets/apple-touch-icon.png") in hrefs
+    assert not any(h == "assets/1997-labs-mark.svg" for r, h in hrefs if "icon" in r), "old lime icon still used as tab icon"

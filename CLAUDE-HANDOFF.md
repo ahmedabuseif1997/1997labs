@@ -14,7 +14,8 @@ python -m http.server -d site 8002   # then open http://localhost:8002
 
 - `site/index.html` — page structure, styling, motion, responsive behaviour, analytics scaffolding and copy.
 - `site/assets/fonts/` — self-hosted Manrope and IBM Plex Sans Arabic (OFL-1.1, from Fontsource).
-- `site/assets/1997-labs-mark.svg` — logo and favicon.
+- `site/assets/1997-labs-mark.svg` — old lime monogram; still the header logo on privacy.html and 404.html and the JSON-LD `logo`.
+- `site/assets/favicon.svg` (tab icon: dark circle, white 9, blue 7), `site/favicon.ico` (16/32/48 fallback), `site/assets/apple-touch-icon.png` (180, iPhone home screen). Source script: digits are Manrope 800 outlines, not live text.
 - `site/assets/og-image.jpg` — 1200×630 share image (screenshot of the light-mode hero).
 - `site/privacy.html`, `site/404.html`, `site/robots.txt`, `site/sitemap.xml`.
 - `1997-LABS-BRAND-PROFILE.md` — positioning and brand foundation.
