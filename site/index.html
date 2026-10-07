@@ -518,6 +518,13 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 .chan-ic{width:26px;height:26px;display:grid;place-items:center;flex:none}
 .chan-ic svg{width:100%;height:100%}
 @media (max-width:620px){.chan{font-size:16px}.chan-ic{width:22px;height:22px}}
+
+/* ---------- hero chat tile: newest message always fully visible; the oldest leaves whole when space runs out ---------- */
+#tchat .tchat-msgs{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;overflow:hidden}
+#tchat .bub{display:none;flex:none;font-size:12.5px;padding:7px 11px;line-height:1.35}
+#tchat .bub.show{display:block;animation:tbub .4s ease both}
+#tchat .bub.show.gone{display:none}
+@keyframes tbub{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -575,7 +582,7 @@ html[dir="rtl"] .hero .h1{letter-spacing:0;line-height:1.25}
 <div class="trust fp d5"><span data-i18n="trust.1">Arabic & English</span><span data-i18n="trust.2">Built in Dubai</span><span data-i18n="trust.3">Easy to use, no tech skills</span></div></div>
     <div class="bento" aria-hidden="true">
       <div class="tile t-brand sf-tile" dir="ltr"><div class="sf-board" id="flapBoard"><div class="sf-row sf-brand"></div><div class="sf-row sf-msg"></div></div></div>
-      <div class="tile t-chat" id="tchat"><small>WhatsApp AI</small><div class="bub in" data-i18n="os.m1">Hi, can I book a visit tomorrow?</div><div class="bub out" data-i18n="os.m2">Of course! Tomorrow at 5:00 PM is free. Shall I book it?</div><div class="bub in" data-i18n="os.m3">Yes please</div><div class="bub out" data-i18n="os.m4">Done ✅ You'll get a reminder 1 hour before.</div></div>
+      <div class="tile t-chat" id="tchat"><small>WhatsApp AI</small><div class="tchat-msgs"><div class="bub in" data-i18n="os.m1">Hi, can I book a visit tomorrow?</div><div class="bub out" data-i18n="os.m2">Of course! Tomorrow at 5:00 PM is free. Shall I book it?</div><div class="bub in" data-i18n="os.m3">Yes please</div><div class="bub out" data-i18n="os.m4">Done ✅ You'll get a reminder 1 hour before.</div></div></div>
       <div class="tile t-num"><small data-i18n="f.t1">Bookings today</small><b id="bk">0</b><div class="dotsrow" id="bkd"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
       <div class="tile t-clock"><div><div class="clk"><i></i></div><small data-i18n="f.t3">Always on · 24/7</small></div></div>
       <div class="tile t-rev"><small data-i18n="f.t2">Revenue</small><b>+38%</b><svg viewBox="0 0 300 80" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".25"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path class="a" style="color:var(--lime)" d="M0 70 L40 60 L80 64 L120 45 L160 50 L200 30 L240 34 L300 8 L300 80 L0 80Z"/><path class="l" d="M0 70 L40 60 L80 64 L120 45 L160 50 L200 30 L240 34 L300 8"/></svg></div>
@@ -915,8 +922,13 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   const spot=document.getElementById("spot"), hero=spot.parentElement;
   hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect(); spot.style.setProperty("--sx",(e.clientX-r.left)+"px"); spot.style.setProperty("--sy",(e.clientY-r.top)+"px");});
   // chat loop
-  const bubs=[...document.querySelectorAll("#tchat .bub")]; let k=0;
-  setInterval(()=>{ if(k>=bubs.length+2){ bubs.forEach(b=>b.classList.remove("show")); k=0; return; } if(bubs[k]) bubs[k].classList.add("show"); k++; },1100);
+  const bubs=[...document.querySelectorAll("#tchat .bub")], msgs=document.querySelector("#tchat .tchat-msgs"); let k=0;
+  // never show a half-cut bubble: if the messages no longer fit, the oldest one leaves completely
+  const fit=()=>{ const top=msgs.getBoundingClientRect().top; const on=bubs.filter(b=>b.classList.contains("show")&&!b.classList.contains("gone"));
+    while(on.length>1 && on[0].getBoundingClientRect().top<top-0.5) on.shift().classList.add("gone"); };
+  const refit=()=>{ bubs.forEach(b=>b.classList.remove("gone")); fit(); };
+  addEventListener("resize",refit); const prevHook=window.__langHook; window.__langHook=()=>{ if(prevHook) prevHook(); refit(); };
+  setInterval(()=>{ if(k>=bubs.length+2){ bubs.forEach(b=>b.classList.remove("show","gone")); k=0; return; } if(bubs[k]){ bubs[k].classList.add("show"); fit(); } k++; },1100);
   setTimeout(()=>{ bubs[0].classList.add("show"); k=1; },300);
   // bookings count
   const bk=document.getElementById("bk"), dots=[...document.querySelectorAll("#bkd i")]; let n=0;
@@ -988,7 +1000,7 @@ document.getElementById("yr").textContent = new Date().getFullYear();
   setTimeout(()=>{ top.set("1997 LABS",{n:9,spin:3}); show(); },350);
   // Runs on its own timer, not tied to scrolling: a new service every 2.5 seconds (it rests only while the browser tab is hidden).
   setInterval(()=>{ if(document.hidden) return; i++; show(); }, 2500);
-  window.__langHook=show;
+  const prevHook=window.__langHook; window.__langHook=()=>{ if(prevHook) prevHook(); show(); };
 })();
 
 
